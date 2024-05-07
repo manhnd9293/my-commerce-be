@@ -13,4 +13,7 @@ export default () => ({
     synchronize: process.env.NODE_ENV !== 'production',
   },
   appUrl: process.env.APP_URL,
+  jwt: {
+    secret: process.env.JWT_SECRET,
+  },
 });
