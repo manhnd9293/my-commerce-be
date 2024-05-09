@@ -3,7 +3,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class CategoriesService {
@@ -35,15 +35,41 @@ export class CategoriesService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
+  findOne(id: number): Promise<Category | null> {
+    return this.categoryRepository.findOne({
+      where: {
+        id,
+      },
+    });
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
+  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
+    const category = await this.categoryRepository.findOne({
+      where: {
+        id,
+      },
+    });
+    if (!category) {
+      throw new BadRequestException('Category not found');
+    }
+    this.categoryRepository.merge(category, updateCategoryDto);
+    return this.categoryRepository.save(category);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} category`;
+  async remove(data: { ids: number[] }) {
+    const categories = await this.categoryRepository.find({
+      where: {
+        id: In(data.ids),
+      },
+    });
+    if (data.ids.some((id) => !categories.map((c) => c.id).includes(id))) {
+      throw new BadRequestException('Some category id not exist');
+    }
+
+    await this.categoryRepository.delete({
+      id: In(data.ids),
+    });
+
+    return 'delete success';
   }
 }
