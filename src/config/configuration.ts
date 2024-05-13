@@ -16,4 +16,5 @@ export default () => ({
   jwt: {
     secret: process.env.JWT_SECRET,
   },
+  version: process.env.VERSION,
 });

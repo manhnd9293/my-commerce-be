@@ -5,7 +5,9 @@ import { Public } from '../../decorators/public.decorator';
 import { User } from '../../decorators/user.decorator';
 import { UserAuth } from '../auth/jwt.strategy';
 import { UserEntity } from './entity/user.entity';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -17,6 +19,7 @@ export class UsersController {
   }
 
   @Get('/me')
+  @ApiBearerAuth()
   me(@User() user: UserAuth): Promise<UserEntity> {
     return this.usersService.findByEmail(user.email);
   }

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,7 +11,19 @@ async function bootstrap() {
   app.enableCors({
     origin: configService.get('appUrl'),
   });
+
   app.useGlobalPipes(new ValidationPipe());
+  const documentConfig = new DocumentBuilder()
+    .setTitle('My Commerce API')
+    .setDescription('API for My Commerce Application')
+    .setVersion(configService.get('version'))
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, documentConfig);
+  SwaggerModule.setup('docs', app, document, {
+    useGlobalPrefix: true,
+  });
+
   await app.listen(configService.get('port'));
 }
 
