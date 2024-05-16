@@ -1,14 +1,16 @@
 import {
   Controller,
+  Delete,
   Get,
   HttpStatus,
+  Param,
   ParseFilePipeBuilder,
   Post,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { AppService } from './app.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller()
@@ -27,7 +29,8 @@ export class AppController {
     @UploadedFiles(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
-          fileType: new RegExp(/\.(jpg|png|webp)/),
+          // fileType: new RegExp(/(jpg|png|webp)/),
+          fileType: 'jpeg',
         })
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -35,7 +38,17 @@ export class AppController {
     )
     files: Array<Express.Multer.File>,
   ) {
-    console.log({ files });
-    return 'done';
+    return this.appService.testUploadFile(files);
+  }
+
+  @Get('/presign-url/:assetId')
+  @ApiParam({ name: 'id', type: String })
+  getPreSignUrl(@Param() params: { assetId: string }) {
+    return this.appService.getPresignUrl(Number(params.assetId));
+  }
+
+  @Delete('/asset/:assetId')
+  deleteAsset(@Param() params: { assetId: string }) {
+    return this.appService.deleteAsset(Number(params.assetId));
   }
 }

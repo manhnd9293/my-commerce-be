@@ -10,6 +10,7 @@ import { DatabaseConfig } from './config/database.config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './domains/auth/jwt-auth.guard';
 import { CategoriesModule } from './domains/categories/categories.module';
+import { CommonModule } from './domains/common/common.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CategoriesModule } from './domains/categories/categories.module';
       useClass: DatabaseConfig,
     }),
     CategoriesModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [
