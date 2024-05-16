@@ -80,7 +80,7 @@ export class ProductsService {
         id: newProduct.id,
       },
       relations: {
-        // productColors: true,
+        productColors: true,
         productSizes: true,
         productVariants: true,
         category: true,

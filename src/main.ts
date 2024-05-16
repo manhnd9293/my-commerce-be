@@ -24,6 +24,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, documentConfig);
   SwaggerModule.setup('docs', app, document, {
     useGlobalPrefix: true,
+    swaggerOptions: {
+      displayRequestDuration: true,
+      persistAuthorization: true,
+    },
   });
 
   await app.listen(configService.get('port'));
