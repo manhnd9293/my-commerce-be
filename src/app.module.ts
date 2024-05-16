@@ -12,6 +12,8 @@ import { JwtAuthGuard } from './domains/auth/jwt-auth.guard';
 import { CategoriesModule } from './domains/categories/categories.module';
 import { CommonModule } from './domains/common/common.module';
 import { ProductsModule } from './domains/products/products.module';
+import { addTransactionalDataSource } from 'typeorm-transactional';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
@@ -23,6 +25,12 @@ import { ProductsModule } from './domains/products/products.module';
     }),
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfig,
+      dataSourceFactory: async (options) => {
+        if (!options) {
+          throw new Error('No database option passed');
+        }
+        return addTransactionalDataSource(new DataSource(options));
+      },
     }),
     CategoriesModule,
     CommonModule,
