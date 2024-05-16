@@ -11,6 +11,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './domains/auth/jwt-auth.guard';
 import { CategoriesModule } from './domains/categories/categories.module';
 import { CommonModule } from './domains/common/common.module';
+import { ProductsModule } from './domains/products/products.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CommonModule } from './domains/common/common.module';
     }),
     CategoriesModule,
     CommonModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [
