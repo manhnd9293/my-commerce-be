@@ -37,6 +37,10 @@ export class UsersService {
   findByEmail(email: string): Promise<UserEntity> {
     return this.userRepository.findOne({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+      },
     });
   }
 }
