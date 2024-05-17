@@ -49,6 +49,19 @@ export class CategoriesService {
         id,
       },
     });
+    const checkName = await this.categoryRepository
+      .createQueryBuilder()
+      .where('lower(name) like :categoryName', {
+        categoryName: updateCategoryDto.name?.toLowerCase(),
+      })
+      .andWhere('id != :updateId', { updateId: id })
+      .getOne();
+
+    if (checkName) {
+      throw new BadRequestException(
+        `Category with name ${updateCategoryDto.name} existed`,
+      );
+    }
     if (!category) {
       throw new BadRequestException('Category not found');
     }

@@ -11,6 +11,11 @@ import { ProductVariantImage } from './entities/product-variant-image.entity';
 import { UserAuth } from '../auth/jwt.strategy';
 import { Category } from '../categories/entities/category.entity';
 import { Transactional } from 'typeorm-transactional';
+import {
+  DEFAULT_COLOR,
+  DEFAULT_COLOR_CODE,
+  DEFAULT_SIZE,
+} from '../../utils/constants/constant';
 
 @Injectable()
 export class ProductsService {
@@ -48,14 +53,20 @@ export class ProductsService {
     });
     const newProduct = await this.productRepository.save(product);
 
-    const productColors = createProductDto.productColors.map((pc) => {
+    const productColors = (
+      createProductDto.productColors || [
+        { name: DEFAULT_COLOR, code: DEFAULT_COLOR_CODE },
+      ]
+    ).map((pc) => {
       const productColor = this.productColorRepository.create(pc);
       productColor.productId = newProduct.id;
       return productColor;
     });
     const newColors = await this.productColorRepository.save(productColors);
 
-    const productSizes = createProductDto.productSizes.map((ps) => {
+    const productSizes = (
+      createProductDto.productSizes || [{ name: DEFAULT_SIZE }]
+    ).map((ps) => {
       const productSize = this.productSizeRepository.create(ps);
       productSize.productId = newProduct.id;
       return productSize;

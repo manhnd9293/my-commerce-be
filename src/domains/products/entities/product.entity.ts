@@ -3,7 +3,13 @@ import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
 import { ProductSize } from './product-size.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { ProductColor } from './product-color.entity';
-import { IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { ProductVariant } from './product-variant.entity';
 
 @Entity('products')
@@ -16,7 +22,8 @@ export class Product extends AbstractBaseEntity {
 
   @IsString()
   @MaxLength(10000)
-  @Column({ name: 'description', type: 'text' })
+  @IsOptional()
+  @Column({ name: 'description', type: 'text', nullable: true })
   description: string;
 
   @OneToMany(() => ProductSize, (ps) => ps.product, {

@@ -9,7 +9,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
-import { StorageTopLevelFolder } from '../../enums/storage-to-level-folder';
+import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 import { v1 as uuid } from 'uuid';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
