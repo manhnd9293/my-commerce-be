@@ -4,22 +4,29 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './jwt.strategy';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from '../users/entity/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @InjectRepository(UserEntity)
+    private readonly userEntityRepository: Repository<UserEntity>,
   ) {}
 
   async signIn(email: string, password: string) {
-    const userEntity = await this.userService.findByEmail(email);
+    const userEntity = await this.userEntityRepository.findOne({
+      where: {
+        email,
+      },
+    });
     if (!userEntity) {
       throw new HttpException('User email not exists', HttpStatus.NOT_FOUND);
     }
