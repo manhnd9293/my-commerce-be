@@ -11,6 +11,7 @@ import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ListId } from './dto/list-id.dto';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -42,7 +43,7 @@ export class CategoriesController {
   }
 
   @Delete()
-  remove(@Body() data: { ids: number[] }) {
+  remove(@Body() data: ListId) {
     return this.categoriesService.remove(data);
   }
 }
