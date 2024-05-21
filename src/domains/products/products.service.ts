@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import { ProductColor } from './entities/product-color.entity';
 import { ProductSize } from './entities/product-size.entity';
 import { ProductVariant } from './entities/product-variant.entity';
-import { ProductVariantImage } from './entities/product-variant-image.entity';
 import { UserAuth } from '../auth/jwt.strategy';
 import { Category } from '../categories/entities/category.entity';
 import { Transactional } from 'typeorm-transactional';
@@ -16,6 +15,10 @@ import {
   DEFAULT_COLOR_CODE,
   DEFAULT_SIZE,
 } from '../../utils/constants/constant';
+import { FileStorageService } from '../common/file-storage.service';
+import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
+import { v4 as uuidv4 } from 'uuid';
+import { ProductImage } from './entities/product-image.entity';
 
 @Injectable()
 export class ProductsService {
@@ -28,10 +31,11 @@ export class ProductsService {
     private readonly productSizeRepository: Repository<ProductSize>,
     @InjectRepository(ProductVariant)
     private readonly productVariantRepository: Repository<ProductVariant>,
-    @InjectRepository(ProductVariantImage)
-    private readonly productVariantImageRepository: Repository<ProductVariantImage>,
+    @InjectRepository(ProductImage)
+    private readonly productImageRepository: Repository<ProductImage>,
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    private readonly fileStorageService: FileStorageService,
   ) {}
 
   @Transactional()
@@ -46,7 +50,7 @@ export class ProductsService {
     }
 
     const product = this.productRepository.create({
-      categoryId: createProductDto.categoryId,
+      categoryId: Number(createProductDto.categoryId),
       name: createProductDto.name,
       description: createProductDto.description,
       createdById: user.userId,
@@ -74,8 +78,8 @@ export class ProductsService {
     const newSizes = await this.productSizeRepository.save(productSizes);
 
     const variants = [];
-    for (let color of newColors) {
-      for (let size of newSizes) {
+    for (const color of newColors) {
+      for (const size of newSizes) {
         const productVariant = this.productVariantRepository.create();
         productVariant.productColorId = color.id;
         productVariant.productSizeId = size.id;
@@ -109,6 +113,46 @@ export class ProductsService {
 
   update(id: number, updateProductDto: UpdateProductDto) {
     return `This action updates a #${id} product`;
+  }
+
+  async updateImages(
+    id: number,
+    productImageFiles: Array<Express.Multer.File>,
+    user: UserAuth,
+  ) {
+    const updateProduct = await this.productRepository.findOne({
+      where: {
+        id,
+      },
+    });
+    if (!updateProduct) {
+      throw new BadRequestException('Update product not found');
+    }
+
+    const assets = await Promise.all(
+      productImageFiles.map(async (file) => {
+        return await this.fileStorageService.saveFile(
+          file,
+          StorageTopLevelFolder.Products,
+          `${uuidv4()}.${file.mimetype}`,
+        );
+      }),
+    );
+
+    const productImageEntities = assets
+      .map((asset) => {
+        return this.productImageRepository.create({
+          productId: updateProduct.id,
+          assetId: asset.id,
+          createdById: user.userId,
+        });
+      })
+      .reduce((acc, cur) => {
+        return acc.concat(cur);
+      }, []);
+    await this.productImageRepository.save(productImageEntities);
+
+    return 'update success';
   }
 
   remove(id: number) {

@@ -11,6 +11,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ProductVariant } from './product-variant.entity';
+import { ProductImage } from './product-image.entity';
 
 @Entity('products')
 export class Product extends AbstractBaseEntity {
@@ -44,7 +45,7 @@ export class Product extends AbstractBaseEntity {
   })
   productVariants?: ProductVariant[];
 
-  @IsNumber()
+  // @IsNumber()
   @IsNotEmpty()
   @Column({ name: 'category_id', type: 'bigint' })
   categoryId: number;
@@ -52,4 +53,10 @@ export class Product extends AbstractBaseEntity {
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'category_id', referencedColumnName: 'id' })
   category: Category;
+
+  @OneToMany(() => ProductImage, (pi) => pi.product, {
+    orphanedRowAction: 'disable',
+    cascade: false,
+  })
+  productImages: ProductImage[];
 }

@@ -1,6 +1,6 @@
 import { CreateProductSizeDto } from './create-product-size.dto';
 import { CreateProductColorDto } from './create-product-color.dto';
-import { PickType } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { Product } from '../entities/product.entity';
 
 export class CreateProductDto extends PickType(Product, [
@@ -8,7 +8,15 @@ export class CreateProductDto extends PickType(Product, [
   'description',
   'categoryId',
 ] as const) {
+  @ApiProperty({
+    isArray: true,
+    type: CreateProductSizeDto,
+  })
   productSizes: CreateProductSizeDto[];
 
+  @ApiProperty({
+    isArray: true,
+    type: CreateProductColorDto,
+  })
   productColors: CreateProductColorDto[];
 }

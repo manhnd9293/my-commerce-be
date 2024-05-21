@@ -1,9 +1,8 @@
 import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Product } from './product.entity';
 import { ProductSize } from './product-size.entity';
 import { ProductColor } from './product-color.entity';
-import { ProductVariantImage } from './product-variant-image.entity';
 
 @Entity('product_variant')
 export class ProductVariant extends AbstractBaseEntity {
@@ -42,9 +41,6 @@ export class ProductVariant extends AbstractBaseEntity {
     referencedColumnName: 'id',
   })
   productColor: ProductColor;
-
-  @OneToMany(() => ProductVariantImage, (pvi) => pvi.productVariant)
-  images: ProductVariantImage[];
 
   @Column({ name: 'quantity', type: 'int', default: 0 })
   quantity: number;

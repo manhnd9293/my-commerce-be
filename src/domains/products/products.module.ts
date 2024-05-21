@@ -7,8 +7,8 @@ import { ProductSize } from './entities/product-size.entity';
 import { ProductColor } from './entities/product-color.entity';
 import { Asset } from '../common/entities/asset.entity';
 import { ProductVariant } from './entities/product-variant.entity';
-import { ProductVariantImage } from './entities/product-variant-image.entity';
 import { Category } from '../categories/entities/category.entity';
+import { ProductImage } from './entities/product-image.entity';
 
 @Module({
   imports: [
@@ -18,8 +18,8 @@ import { Category } from '../categories/entities/category.entity';
       ProductColor,
       Asset,
       ProductVariant,
-      ProductVariantImage,
       Category,
+      ProductImage,
     ]),
   ],
   controllers: [ProductsController],
