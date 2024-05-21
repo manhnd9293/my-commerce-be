@@ -104,7 +104,12 @@ export class ProductsService {
   }
 
   findAll() {
-    return `This action returns all products`;
+    return this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.productSizes', 'productSizes')
+      .leftJoinAndSelect('product.productColors', 'productColors')
+      .leftJoinAndSelect('product.category', 'category')
+      .getMany();
   }
 
   findOne(id: number) {

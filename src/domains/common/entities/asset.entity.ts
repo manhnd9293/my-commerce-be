@@ -12,5 +12,5 @@ export class Asset extends AbstractBaseEntity {
   @Column({ name: 'size', type: 'bigint' })
   size: number;
 
-  url: string;
+  preSignUrl: string;
 }
