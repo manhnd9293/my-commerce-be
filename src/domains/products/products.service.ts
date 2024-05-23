@@ -112,8 +112,30 @@ export class ProductsService {
       .getMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: number) {
+    const product = await this.productRepository
+      .createQueryBuilder('product')
+      .andWhere('product.id = :productId', { productId: id })
+      .leftJoinAndSelect('product.productSizes', 'productSizes')
+      .leftJoinAndSelect('product.productColors', 'productColors')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.productImages', 'productImages')
+      .leftJoinAndSelect('productImages.asset', 'asset')
+      .getOne();
+
+    if (!product) {
+      throw new BadRequestException('Product not found');
+    }
+    if (product.productImages) {
+      for (const productImage of product.productImages) {
+        const preSignUrl = await this.fileStorageService.createPresignedUrl(
+          productImage.assetId,
+        );
+        productImage.asset.preSignUrl = preSignUrl;
+      }
+    }
+
+    return product;
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {
