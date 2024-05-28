@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -39,9 +40,9 @@ export class ProductsController {
     return this.productsService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(+id, updateProductDto);
+  @Put()
+  update(@Body() updateProductDto: UpdateProductDto, @User() user: UserAuth) {
+    return this.productsService.update(updateProductDto, user);
   }
 
   @Patch(':id/images')

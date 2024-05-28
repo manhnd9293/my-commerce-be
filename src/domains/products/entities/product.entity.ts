@@ -45,7 +45,6 @@ export class Product extends AbstractBaseEntity {
   })
   productVariants?: ProductVariant[];
 
-  // @IsNumber()
   @IsNotEmpty()
   @Column({ name: 'category_id', type: 'bigint' })
   categoryId: number;

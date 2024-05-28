@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ProductColor } from './entities/product-color.entity';
 import { ProductSize } from './entities/product-size.entity';
 import { ProductVariant } from './entities/product-variant.entity';
@@ -19,6 +19,7 @@ import { FileStorageService } from '../common/file-storage.service';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 import { v4 as uuidv4 } from 'uuid';
 import { ProductImage } from './entities/product-image.entity';
+import { use } from 'passport';
 
 @Injectable()
 export class ProductsService {
@@ -138,8 +139,158 @@ export class ProductsService {
     return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  @Transactional()
+  async update(updateProductDto: UpdateProductDto, user: UserAuth) {
+    const category = await this.categoryRepository.findOne({
+      where: {
+        id: updateProductDto.categoryId,
+      },
+    });
+
+    if (!category) {
+      throw new BadRequestException('Update category not found');
+    }
+
+    const product = await this.productRepository.findOne({
+      where: {
+        id: updateProductDto.id,
+      },
+      relations: {
+        productImages: true,
+        productSizes: true,
+        productColors: true,
+      },
+    });
+
+    if (!product) {
+      throw new BadRequestException('product not found');
+    }
+
+    await this.productRepository.update(
+      { id: updateProductDto.id },
+      {
+        updatedById: user.userId,
+        categoryId: updateProductDto.categoryId,
+        description: updateProductDto.description,
+        name: updateProductDto.name,
+      },
+    );
+
+    const remainImageIds = updateProductDto.productImages.map(
+      (productImage) => productImage.id,
+    );
+
+    const deletedImageIds = product.productImages
+      .map((productImage) => productImage.id)
+      .filter((id) => !remainImageIds.includes(id));
+
+    await this.productImageRepository.delete({
+      id: In(deletedImageIds),
+    });
+
+    const deleteAssetIds = product.productImages
+      .filter((image) => deletedImageIds.includes(image.id))
+      .map((productImage) => productImage.assetId);
+
+    for (const assetId of deleteAssetIds) {
+      await this.fileStorageService.deleteAsset(assetId);
+    }
+
+    const remainSizeIds = updateProductDto.productSizes
+      .filter((size) => size.id !== null && size.id !== undefined)
+      .map((size) => size.id);
+    await this.productSizeRepository.save(
+      updateProductDto.productSizes.filter((size) =>
+        remainSizeIds.includes(size.id),
+      ),
+    );
+    const deleteSizeIds = product.productSizes
+      .filter((size) => !remainSizeIds.includes(size.id))
+      .map((size) => size.id);
+    await this.productVariantRepository.delete({
+      productSizeId: In(deleteSizeIds),
+    });
+    await this.productSizeRepository.delete({
+      id: In(deleteSizeIds),
+    });
+    const newSizes = updateProductDto.productSizes
+      .filter((size) => !size.id)
+      .map((size) =>
+        this.productSizeRepository.create({ ...size, productId: product.id }),
+      );
+    const newProductSizes = await this.productSizeRepository.save(newSizes);
+
+    const remainColorIds = updateProductDto.productColors
+      .filter((color) => color.id !== null && color.id !== undefined)
+      .map((color) => color.id);
+    await this.productColorRepository.save(
+      updateProductDto.productColors.filter((c) =>
+        remainColorIds.includes(c.id),
+      ),
+    );
+    const deleteColorIds = product.productColors
+      .filter((color) => !remainColorIds.includes(color.id))
+      .map((color) => color.id);
+    await this.productVariantRepository.delete({
+      productColorId: In(deleteColorIds),
+    });
+    await this.productColorRepository.delete({
+      id: In(deleteColorIds),
+    });
+    const newColors = updateProductDto.productColors
+      .filter((color) => !color.id)
+      .map((color) =>
+        this.productColorRepository.create({ ...color, productId: product.id }),
+      );
+
+    const newProductColors = await this.productColorRepository.save(newColors);
+
+    const newProductVariants = [];
+    for (const newSize of newProductSizes) {
+      for (const colorId of remainColorIds) {
+        newProductVariants.push(
+          this.productVariantRepository.create({
+            productSizeId: newSize.id,
+            productColorId: colorId,
+            productId: updateProductDto.id,
+            createdById: user.userId,
+          }),
+        );
+      }
+    }
+
+    for (const newColor of newProductColors) {
+      for (const sizeId of remainSizeIds) {
+        newProductVariants.push(
+          this.productVariantRepository.create({
+            productId: updateProductDto.id,
+            productColorId: newColor.id,
+            productSizeId: sizeId,
+            createdById: user.userId,
+          }),
+        );
+      }
+    }
+
+    for (const newColor of newProductColors) {
+      for (const newSize of newProductSizes) {
+        newProductVariants.push(
+          this.productVariantRepository.create({
+            productId: updateProductDto.id,
+            productColorId: newColor.id,
+            productSizeId: newSize.id,
+            createdById: user.userId,
+          }),
+        );
+      }
+    }
+    await this.productVariantRepository.save(newProductVariants);
+
+    return this.productRepository.findOne({
+      where: {
+        id: updateProductDto.id,
+      },
+    });
   }
 
   async updateImages(
