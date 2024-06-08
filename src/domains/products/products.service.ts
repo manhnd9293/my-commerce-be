@@ -104,13 +104,23 @@ export class ProductsService {
     });
   }
 
-  findAll() {
-    return this.productRepository
+  async findAll() {
+    const products = await this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.productSizes', 'productSizes')
       .leftJoinAndSelect('product.productColors', 'productColors')
       .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.productImages', 'productImages')
+      .leftJoinAndSelect('productImages.asset', 'asset')
       .getMany();
+
+    for (const product of products) {
+      for (const image of product.productImages) {
+        image.asset.preSignUrl =
+          await this.fileStorageService.createPresignedUrl(image.assetId);
+      }
+    }
+    return products;
   }
 
   async findOne(id: number) {
