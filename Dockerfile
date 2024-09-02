@@ -21,6 +21,7 @@ WORKDIR .
 
 COPY --from=dist dist ./dist
 COPY --from=node_modules node_modules ./node_modules
+COPY src/config/db ./dist/src/config/db
 
 EXPOSE $PORT
 
