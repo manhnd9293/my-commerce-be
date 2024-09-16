@@ -183,6 +183,7 @@ export class ProductsService {
         categoryId: updateProductDto.categoryId,
         description: updateProductDto.description,
         name: updateProductDto.name,
+        price: updateProductDto.price,
       },
     );
 

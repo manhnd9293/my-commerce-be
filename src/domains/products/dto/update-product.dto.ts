@@ -9,6 +9,7 @@ export class UpdateProductDto extends PickType(Product, [
   'categoryId',
   'productImages',
   'id',
+  'price',
 ] as const) {
   @ApiProperty({
     isArray: true,

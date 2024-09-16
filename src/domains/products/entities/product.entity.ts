@@ -52,4 +52,7 @@ export class Product extends AbstractBaseEntity {
     cascade: false,
   })
   productImages: ProductImage[];
+
+  @Column({ name: 'price', nullable: true, type: 'int' })
+  price: number;
 }
