@@ -132,6 +132,7 @@ export class ProductsService {
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
       .leftJoinAndSelect('productImages.asset', 'asset')
+      .leftJoinAndSelect('product.productVariants', 'productVariants')
       .getOne();
 
     if (!product) {
