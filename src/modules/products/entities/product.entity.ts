@@ -55,4 +55,6 @@ export class Product extends AbstractBaseEntity {
 
   @Column({ name: 'price', nullable: true, type: 'int' })
   price: number;
+
+  thumbnailUrl: string;
 }

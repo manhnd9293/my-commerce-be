@@ -13,7 +13,7 @@ export class CartItemEntity extends AbstractBaseEntity {
     name: 'user_id',
     referencedColumnName: 'id',
   })
-  User: UserEntity;
+  user: UserEntity;
 
   @Column({ name: 'product_variant_id', type: 'number', nullable: false })
   productVariantId: number;
