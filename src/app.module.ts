@@ -14,6 +14,7 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { CartsModule } from './modules/carts/carts.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { CartsModule } from './modules/carts/carts.module';
     CommonModule,
     ProductsModule,
     CartsModule,
+    OrdersModule,
   ],
   providers: [
     {
