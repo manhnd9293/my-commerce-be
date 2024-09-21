@@ -115,11 +115,11 @@ export class ProductsService {
       .getMany();
 
     for (const product of products) {
-      for (const image of product.productImages) {
-        image.asset.preSignUrl =
-          await this.fileStorageService.createPresignedUrl(image.assetId);
-      }
+      product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+        product.productImages[0].assetId,
+      );
     }
+
     return products;
   }
 

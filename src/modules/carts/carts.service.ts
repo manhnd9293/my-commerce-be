@@ -1,10 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CartItemEntity } from './entities/cart-item.entity';
 import { Repository } from 'typeorm';
 import { CartItemDto } from './dtos/cart-item.dto';
 import { ProductVariant } from '../products/entities/product-variant.entity';
 import { UserAuth } from '../auth/jwt.strategy';
+import { FileStorageService } from '../common/file-storage.service';
 
 @Injectable()
 export class CartsService {
@@ -13,6 +18,7 @@ export class CartsService {
     private readonly cartItemRepository: Repository<CartItemEntity>,
     @InjectRepository(ProductVariant)
     private readonly productVariantRepository: Repository<ProductVariant>,
+    private readonly fileStorageService: FileStorageService,
   ) {}
 
   async addItemToCart(cartItem: CartItemDto, user: UserAuth) {
@@ -41,6 +47,46 @@ export class CartsService {
     }
     cartItemEntity.quantity += cartItem.quantity;
 
-    return await this.cartItemRepository.save(cartItemEntity);
+    const savedCartItem = await this.cartItemRepository.save(cartItemEntity);
+    const cartItemFull = await this.cartItemRepository.findOne({
+      where: {
+        id: savedCartItem.id,
+      },
+      relations: {
+        productVariant: {
+          product: {
+            productImages: true,
+          },
+          productSize: true,
+          productColor: true,
+        },
+      },
+    });
+    cartItemFull.productVariant.product.thumbnailUrl =
+      await this.fileStorageService.createPresignedUrl(
+        cartItemFull.productVariant.product.productImages[0].assetId,
+      );
+    return cartItemFull;
+  }
+
+  async removeCartItem(cartItemId: number, user: UserAuth) {
+    const cartItemEntity = await this.cartItemRepository.findOne({
+      where: {
+        id: cartItemId,
+      },
+    });
+    if (!cartItemEntity) {
+      throw new BadRequestException('Cart item not found');
+    }
+
+    if (cartItemEntity.userId !== user.userId) {
+      throw new ForbiddenException('Invalid user of cart item');
+    }
+
+    await this.cartItemRepository.delete({
+      id: cartItemId,
+    });
+
+    return 'success';
   }
 }
