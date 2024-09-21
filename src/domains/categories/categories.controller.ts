@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -24,9 +25,12 @@ export class CategoriesController {
     return this.categoriesService.create(createCategoryDto);
   }
 
-  @Get()
-  findAll() {
-    return this.categoriesService.findAll();
+  @Get('')
+  getPage(@Query('page') page: string, @Query('pageSize') pageSize: string) {
+    return this.categoriesService.getPage(
+      Number(page) ?? 0,
+      Number(pageSize) ?? 0,
+    );
   }
 
   @Get(':id')

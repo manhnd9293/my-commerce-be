@@ -35,6 +35,18 @@ export class CategoriesService {
     });
   }
 
+  async getPage(page: number, pageSize: number) {
+    const total = await this.categoryRepository.count({});
+    const items = await this.categoryRepository.find({
+      order: {
+        createdAt: 'ASC',
+      },
+      skip: page * pageSize,
+      take: pageSize,
+    });
+    return { total, items };
+  }
+
   findOne(id: number): Promise<Category | null> {
     return this.categoryRepository.findOne({
       where: {
