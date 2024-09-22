@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { User } from '../../decorators/user.decorator';
 import { UserAuth } from '../auth/jwt.strategy';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ProductQueryDto } from './dto/product-query.dto';
 
 @Controller('products')
 @ApiTags('Products')
@@ -31,8 +33,8 @@ export class ProductsController {
   }
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query() query: ProductQueryDto) {
+    return this.productsService.findAll(query);
   }
 
   @Get(':id')

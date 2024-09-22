@@ -20,6 +20,7 @@ import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder
 import { v4 as uuidv4 } from 'uuid';
 import { ProductImage } from './entities/product-image.entity';
 import { use } from 'passport';
+import { ProductQueryDto } from './dto/product-query.dto';
 
 @Injectable()
 export class ProductsService {
@@ -104,15 +105,19 @@ export class ProductsService {
     });
   }
 
-  async findAll() {
-    const products = await this.productRepository
+  async findAll(query: ProductQueryDto) {
+    const { categoryId } = query;
+    const queryBuilder = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.productSizes', 'productSizes')
       .leftJoinAndSelect('product.productColors', 'productColors')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
-      .leftJoinAndSelect('productImages.asset', 'asset')
-      .getMany();
+      .leftJoinAndSelect('productImages.asset', 'asset');
+    if (categoryId) {
+      queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+    }
+    const products = await queryBuilder.getMany();
 
     for (const product of products) {
       product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
