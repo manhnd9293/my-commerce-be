@@ -14,7 +14,11 @@ async function bootstrap() {
     origin: configService.get('appUrl'),
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   const documentConfig = new DocumentBuilder()
     .setTitle('My Commerce API')
     .setDescription('API for My Commerce Application')
