@@ -27,4 +27,7 @@ export class CartItemEntity extends AbstractBaseEntity {
 
   @Column({ name: 'quantity', type: 'int', nullable: false })
   quantity: number;
+
+  @Column({ name: 'is_checked_out', type: 'boolean', default: true })
+  isCheckedOut: boolean;
 }

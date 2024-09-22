@@ -10,6 +10,7 @@ import { CartItemDto } from './dtos/cart-item.dto';
 import { ProductVariant } from '../products/entities/product-variant.entity';
 import { UserAuth } from '../auth/jwt.strategy';
 import { FileStorageService } from '../common/file-storage.service';
+import { CartCheckOutUpdateDto } from '../orders/dto/cart-check-out-update.dto';
 
 @Injectable()
 export class CartsService {
@@ -43,6 +44,7 @@ export class CartsService {
         userId: user.userId,
         productVariantId: cartItem.productVariantId,
         quantity: 0,
+        isCheckedOut: true,
       });
     }
     cartItemEntity.quantity += cartItem.quantity;
@@ -88,5 +90,32 @@ export class CartsService {
     });
 
     return 'success';
+  }
+
+  async handleChangeCheckOut(checkout: CartCheckOutUpdateDto, user: UserAuth) {
+    const { cartItemId, isCheckedOut } = checkout;
+    const cartItemEntity = await this.cartItemRepository.findOne({
+      where: {
+        id: cartItemId,
+        userId: user.userId,
+      },
+    });
+    if (!cartItemEntity) {
+      throw new BadRequestException('Cart item not found');
+    }
+    await this.cartItemRepository.update(
+      {
+        id: cartItemId,
+      },
+      {
+        isCheckedOut,
+      },
+    );
+
+    return this.cartItemRepository.findOne({
+      where: {
+        id: cartItemId,
+      },
+    });
   }
 }
