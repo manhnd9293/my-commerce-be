@@ -10,6 +10,7 @@ import { UserAuth } from '../auth/jwt.strategy';
 import { ProductVariant } from '../products/entities/product-variant.entity';
 import { FileStorageService } from '../common/file-storage.service';
 import { OrderQueryDto } from './dto/order-query.dto';
+import { PageData } from '../../utils/common/page-data';
 
 @Injectable()
 export class OrdersService {
@@ -115,6 +116,7 @@ export class OrdersService {
     qb.leftJoinAndSelect('orderItems.productVariant', 'productVariant');
     qb.leftJoinAndSelect('productVariant.product', 'product');
     qb.leftJoinAndSelect('product.productImages', 'productImages');
+    qb.leftJoinAndSelect('od.user', 'user');
     userId && qb.andWhere('od.user_id = :userId', { userId });
     search &&
       qb.andWhere(
@@ -124,30 +126,41 @@ export class OrdersService {
             .where(`od.id::text like :orderIdSearch`, {
               orderIdSearch: searchTerm,
             })
-            .orWhere('LOWER(product.name) like :search', {
-              search: searchTerm,
+            .orWhere(`user.email like :searchEmail`, {
+              searchEmail: searchTerm,
+            })
+            .orWhere('LOWER(product.name) like :searchProductName', {
+              searchProductName: searchTerm,
             });
         }),
       );
+    const total = await qb.getCount();
 
     qb.orderBy(`od.${sortBy}`, order);
     qb.skip((page - 1) * pageSize);
     qb.take(pageSize);
 
     const orderEntities = await qb.getMany();
-    orderEntities.forEach((order) => {
-      order.orderItems.forEach(async (item) => {
-        const product = item.productVariant.product;
-        product.description = null;
-        const productImage = product.productImages[0];
-        product.productImages = null;
-        const signUrl = await this.fileStorageService.createPresignedUrl(
-          productImage.assetId,
-        );
-        product.thumbnailUrl = signUrl;
-      });
-    });
+    // orderEntities.forEach((order) => {
+    //   order.orderItems.forEach(async (item) => {
+    //     const product = item.productVariant.product;
+    //     product.description = null;
+    //     const productImage = product.productImages[0];
+    //     product.productImages = null;
+    //     const signUrl = await this.fileStorageService.createPresignedUrl(
+    //       productImage.assetId,
+    //     );
+    //     product.thumbnailUrl = signUrl;
+    //   });
+    // });
 
-    return orderEntities;
+    const pageData: PageData<OrderEntity> = {
+      data: orderEntities,
+      page,
+      pageSize,
+      totalPage: Math.ceil(total / pageSize),
+    };
+
+    return pageData;
   }
 }

@@ -23,6 +23,11 @@ export class OrdersController {
     return this.ordersService.createOrder(data, user);
   }
 
+  @Get('')
+  getOrders(@User() user: UserAuth, @Query() query: OrderQueryDto) {
+    return this.ordersService.getOrders(query);
+  }
+
   @Get('/my-order')
   getMyOrder(@User() user: UserAuth, @Query() query: OrderQueryDto) {
     if (Number(query.userId) !== user.userId) {
