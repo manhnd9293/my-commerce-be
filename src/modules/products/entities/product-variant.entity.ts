@@ -19,6 +19,7 @@ export class ProductVariant extends AbstractBaseEntity {
   @Column({
     name: 'product_size_id',
     type: 'bigint',
+    nullable: true,
   })
   productSizeId: number;
 
@@ -32,6 +33,7 @@ export class ProductVariant extends AbstractBaseEntity {
   @Column({
     name: 'product_color_id',
     type: 'bigint',
+    nullable: true,
   })
   productColorId: number;
 

@@ -59,29 +59,35 @@ export class ProductsService {
     });
     const newProduct = await this.productRepository.save(product);
 
-    const productColors = (
-      createProductDto.productColors || [
-        { name: DEFAULT_COLOR, code: DEFAULT_COLOR_CODE },
-      ]
-    ).map((pc) => {
-      const productColor = this.productColorRepository.create(pc);
-      productColor.productId = newProduct.id;
-      return productColor;
-    });
-    const newColors = await this.productColorRepository.save(productColors);
+    let newColors = null;
+    if (
+      createProductDto.productColors &&
+      createProductDto.productColors.length > 0
+    ) {
+      const productColors = createProductDto.productColors.map((pc) => {
+        const productColor = this.productColorRepository.create(pc);
+        productColor.productId = newProduct.id;
+        return productColor;
+      });
+      newColors = await this.productColorRepository.save(productColors);
+    }
 
-    const productSizes = (
-      createProductDto.productSizes || [{ name: DEFAULT_SIZE }]
-    ).map((ps) => {
-      const productSize = this.productSizeRepository.create(ps);
-      productSize.productId = newProduct.id;
-      return productSize;
-    });
-    const newSizes = await this.productSizeRepository.save(productSizes);
+    let newSizes = null;
+    if (
+      createProductDto.productSizes &&
+      createProductDto.productSizes.length > 0
+    ) {
+      const productSizes = createProductDto.productSizes.map((ps) => {
+        const productSize = this.productSizeRepository.create(ps);
+        productSize.productId = newProduct.id;
+        return productSize;
+      });
+      newSizes = await this.productSizeRepository.save(productSizes);
+    }
 
     const variants = [];
-    for (const color of newColors) {
-      for (const size of newSizes) {
+    for (const color of newColors || [null]) {
+      for (const size of newSizes || [null]) {
         const productVariant = this.productVariantRepository.create();
         productVariant.productColorId = color.id;
         productVariant.productSizeId = size.id;
@@ -264,7 +270,9 @@ export class ProductsService {
 
     const newProductVariants = [];
     for (const newSize of newProductSizes) {
-      for (const colorId of remainColorIds) {
+      for (const colorId of remainColorIds.length > 0
+        ? remainColorIds
+        : [null]) {
         newProductVariants.push(
           this.productVariantRepository.create({
             productSizeId: newSize.id,
@@ -277,7 +285,7 @@ export class ProductsService {
     }
 
     for (const newColor of newProductColors) {
-      for (const sizeId of remainSizeIds) {
+      for (const sizeId of remainSizeIds.length > 0 ? remainSizeIds : [null]) {
         newProductVariants.push(
           this.productVariantRepository.create({
             productId: updateProductDto.id,

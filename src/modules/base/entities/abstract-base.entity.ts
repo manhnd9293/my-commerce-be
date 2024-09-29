@@ -2,12 +2,9 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
-  ManyToOne,
   PrimaryColumn,
   UpdateDateColumn,
-  JoinColumn,
 } from 'typeorm';
-import { UserEntity } from '../../users/entity/user.entity';
 
 export abstract class AbstractBaseEntity {
   @PrimaryColumn({ generated: 'increment' })
@@ -32,17 +29,17 @@ export abstract class AbstractBaseEntity {
   @Column({ name: 'updated_by_id', type: 'bigint', nullable: true })
   updatedById: number;
 
-  @ManyToOne(() => UserEntity)
-  @JoinColumn({
-    name: 'created_by_id',
-    referencedColumnName: 'id',
-  })
-  createdByUser: UserEntity;
-
-  @ManyToOne(() => UserEntity)
-  @JoinColumn({
-    name: 'updated_by_id',
-    referencedColumnName: 'id',
-  })
-  updatedByUser: UserEntity;
+  // @ManyToOne(() => UserEntity)
+  // @JoinColumn({
+  //   name: 'created_by_id',
+  //   referencedColumnName: 'id',
+  // })
+  // createdByUser: UserEntity;
+  //
+  // @ManyToOne(() => UserEntity)
+  // @JoinColumn({
+  //   name: 'updated_by_id',
+  //   referencedColumnName: 'id',
+  // })
+  // updatedByUser: UserEntity;
 }
