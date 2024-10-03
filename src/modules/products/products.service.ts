@@ -3,23 +3,17 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { In, Not, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ProductColor } from './entities/product-color.entity';
 import { ProductSize } from './entities/product-size.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { UserAuth } from '../auth/jwt.strategy';
 import { Category } from '../categories/entities/category.entity';
 import { Transactional } from 'typeorm-transactional';
-import {
-  DEFAULT_COLOR,
-  DEFAULT_COLOR_CODE,
-  DEFAULT_SIZE,
-} from '../../utils/constants/constant';
 import { FileStorageService } from '../common/file-storage.service';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 import { v4 as uuidv4 } from 'uuid';
 import { ProductImage } from './entities/product-image.entity';
-import { use } from 'passport';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { BaseQueryDto } from '../../utils/common/base-query.dto';
 import { PageData } from '../../utils/common/page-data';

@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
 import { Product } from './product.entity';
 import { IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
