@@ -10,7 +10,7 @@ export class UserEntity {
   @Column({ name: 'email', type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ name: 'password', type: 'text' })
+  @Column({ name: 'password', type: 'text', select: false })
   password: string;
 
   @OneToMany(() => CartItemEntity, (ci) => ci.user)

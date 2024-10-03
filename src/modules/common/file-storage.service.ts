@@ -63,7 +63,7 @@ export class FileStorageService {
       Key: asset.s3Key,
     });
 
-    return getSignedUrl(this.s3, command, { expiresIn: 3600 });
+    return getSignedUrl(this.s3, command, { expiresIn: 10000 });
   }
 
   async deleteAsset(assetId: number) {

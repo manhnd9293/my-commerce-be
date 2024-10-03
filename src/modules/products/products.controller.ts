@@ -19,6 +19,7 @@ import { User } from '../../decorators/user.decorator';
 import { UserAuth } from '../auth/jwt.strategy';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductQueryDto } from './dto/product-query.dto';
+import { BaseQueryDto } from '../../utils/common/base-query.dto';
 
 @Controller('products')
 @ApiTags('Products')
@@ -40,6 +41,11 @@ export class ProductsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(+id);
+  }
+
+  @Get(':id/similar')
+  findSimilarProducts(@Param('id') id: string, @Query() query: BaseQueryDto) {
+    return this.productsService.findSimilarProducts(+id, query);
   }
 
   @Put()

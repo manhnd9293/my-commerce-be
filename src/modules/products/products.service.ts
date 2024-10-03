@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { ProductColor } from './entities/product-color.entity';
 import { ProductSize } from './entities/product-size.entity';
 import { ProductVariant } from './entities/product-variant.entity';
@@ -21,6 +21,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ProductImage } from './entities/product-image.entity';
 import { use } from 'passport';
 import { ProductQueryDto } from './dto/product-query.dto';
+import { BaseQueryDto } from '../../utils/common/base-query.dto';
+import { PageData } from '../../utils/common/page-data';
 
 @Injectable()
 export class ProductsService {
@@ -149,6 +151,9 @@ export class ProductsService {
     if (!product) {
       throw new BadRequestException('Product not found');
     }
+    product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+      product.productImages[0].assetId,
+    );
     if (product.productImages) {
       for (const productImage of product.productImages) {
         const preSignUrl = await this.fileStorageService.createPresignedUrl(
@@ -360,5 +365,43 @@ export class ProductsService {
 
   remove(id: number) {
     return `This action removes a #${id} product`;
+  }
+
+  async findSimilarProducts(productId: number, query: BaseQueryDto) {
+    const { page, pageSize } = query;
+    const currentProduct = await this.productRepository.findOne({
+      where: { id: productId },
+    });
+
+    const qb = this.productRepository.createQueryBuilder('product');
+    qb.andWhere('product.categoryId = :currentCategoryId', {
+      currentCategoryId: currentProduct.categoryId,
+    });
+    qb.andWhere('product.id != :currentId', { currentId: currentProduct.id });
+    qb.leftJoinAndSelect('product.productImages', 'productImages');
+    const total = await qb.getCount();
+    qb.addSelect('abs(product.price - :currentPrice)', 'diff').setParameter(
+      'currentPrice',
+      currentProduct.price,
+    );
+    qb.orderBy('diff', 'ASC');
+    qb.skip((query.page - 1) * query.pageSize);
+    qb.take(query.pageSize);
+    const products = await qb.getMany();
+
+    for (const p of products) {
+      p.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+        p.productImages[0].assetId,
+      );
+    }
+
+    const response: PageData<Product> = {
+      data: products,
+      page,
+      pageSize,
+      totalPage: Math.ceil(total / query.pageSize),
+    };
+
+    return response;
   }
 }
