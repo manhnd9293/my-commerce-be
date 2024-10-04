@@ -3,6 +3,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
@@ -26,6 +27,11 @@ export class OrdersController {
   @Get('')
   getOrders(@User() user: UserAuth, @Query() query: OrderQueryDto) {
     return this.ordersService.getOrders(query);
+  }
+
+  @Get(':id')
+  getOrderDetail(@User() user: UserAuth, @Param('id') id: string) {
+    return this.ordersService.getOrderDetail(+id);
   }
 
   @Get('/my-order')

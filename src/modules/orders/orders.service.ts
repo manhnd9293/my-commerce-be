@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderEntity } from './entities/order.entity';
 import { Brackets, In, Repository } from 'typeorm';
@@ -162,5 +166,37 @@ export class OrdersService {
     };
 
     return pageData;
+  }
+
+  async getOrderDetail(id: number) {
+    const orderEntity = await this.orderRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        orderItems: {
+          productVariant: {
+            product: {
+              productImages: true,
+            },
+            productColor: true,
+            productSize: true,
+          },
+        },
+      },
+    });
+
+    if (!orderEntity) {
+      throw new NotFoundException('Order not found');
+    }
+
+    for (const item of orderEntity.orderItems) {
+      item.productVariant.product.thumbnailUrl =
+        await this.fileStorageService.createPresignedUrl(
+          item.productVariant.product.productImages[0].assetId,
+        );
+    }
+
+    return orderEntity;
   }
 }

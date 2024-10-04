@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CartItemEntity } from '../../carts/entities/cart-item.entity';
 import { OrderEntity } from '../../orders/entities/order.entity';
+import { UserRole } from '../../../utils/enums/user-role';
 
 @Entity('users')
 export class UserEntity {
@@ -18,4 +19,12 @@ export class UserEntity {
 
   @OneToMany(() => OrderEntity, (order) => order.user)
   orders: OrderEntity[];
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.Buyer,
+    name: 'role',
+  })
+  userRole: UserRole;
 }
