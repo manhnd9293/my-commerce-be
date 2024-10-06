@@ -29,6 +29,7 @@ export class OrdersController {
     return this.ordersService.getOrders(query);
   }
 
+  @Roles([UserRole.Admin, UserRole.Buyer])
   @Get(':id')
   getOrderDetail(@User() user: UserAuth, @Param('id') id: string) {
     return this.ordersService.getOrderDetail(+id);

@@ -26,5 +26,5 @@ export class UserEntity {
     default: UserRole.Buyer,
     name: 'role',
   })
-  userRole: UserRole;
+  role: UserRole;
 }

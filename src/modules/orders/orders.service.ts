@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { ProductVariant } from '../products/entities/product-variant.entity';
 import { FileStorageService } from '../common/file-storage.service';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { PageData } from '../../utils/common/page-data';
+import { UserRole } from '../../utils/enums/user-role';
 
 @Injectable()
 export class OrdersService {
@@ -145,18 +147,6 @@ export class OrdersService {
     qb.take(pageSize);
 
     const orderEntities = await qb.getMany();
-    // orderEntities.forEach((order) => {
-    //   order.orderItems.forEach(async (item) => {
-    //     const product = item.productVariant.product;
-    //     product.description = null;
-    //     const productImage = product.productImages[0];
-    //     product.productImages = null;
-    //     const signUrl = await this.fileStorageService.createPresignedUrl(
-    //       productImage.assetId,
-    //     );
-    //     product.thumbnailUrl = signUrl;
-    //   });
-    // });
 
     const pageData: PageData<OrderEntity> = {
       data: orderEntities,
@@ -168,7 +158,7 @@ export class OrdersService {
     return pageData;
   }
 
-  async getOrderDetail(id: number) {
+  async getOrderDetail(id: number, user: UserAuth) {
     const orderEntity = await this.orderRepository.findOne({
       where: {
         id,
@@ -188,6 +178,10 @@ export class OrdersService {
 
     if (!orderEntity) {
       throw new NotFoundException('Order not found');
+    }
+
+    if (user.role === UserRole.Admin && user.userId !== orderEntity.userId) {
+      throw new ForbiddenException('Not allow to see order detail');
     }
 
     for (const item of orderEntity.orderItems) {
