@@ -13,6 +13,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from '../../decorators/user.decorator';
 import { UserAuth } from '../auth/jwt.strategy';
 import { OrderQueryDto } from './dto/order-query.dto';
+import { Roles } from '../../decorators/roles.decorator';
+import { UserRole } from '../../utils/enums/user-role';
 
 @Controller('orders')
 @ApiTags('Orders')
@@ -32,7 +34,7 @@ export class OrdersController {
   @Roles([UserRole.Admin, UserRole.Buyer])
   @Get(':id')
   getOrderDetail(@User() user: UserAuth, @Param('id') id: string) {
-    return this.ordersService.getOrderDetail(+id);
+    return this.ordersService.getOrderDetail(+id, user);
   }
 
   @Get('/my-order')

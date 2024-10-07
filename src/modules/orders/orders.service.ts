@@ -143,6 +143,7 @@ export class OrdersService {
     const total = await qb.getCount();
 
     qb.orderBy(`od.${sortBy}`, order);
+
     qb.skip((page - 1) * pageSize);
     qb.take(pageSize);
 
@@ -180,7 +181,7 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    if (user.role === UserRole.Admin && user.userId !== orderEntity.userId) {
+    if (user.role !== UserRole.Admin && user.userId !== orderEntity.userId) {
       throw new ForbiddenException('Not allow to see order detail');
     }
 

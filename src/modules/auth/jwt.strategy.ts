@@ -35,7 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY) {
   }
 
   async validate(payload: JwtPayload): Promise<UserAuth> {
-    if (payload.email) {
+    if (!payload.email) {
       throw new UnauthorizedException('Email not provided');
     }
 
