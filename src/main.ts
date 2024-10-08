@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { initializeTransactionalContext } from 'typeorm-transactional';
+import helmet from 'helmet';
 
 async function bootstrap() {
   initializeTransactionalContext();
@@ -33,6 +34,8 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   });
+
+  app.use(helmet());
 
   await app.listen(configService.get('port'));
 }

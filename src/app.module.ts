@@ -16,6 +16,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { CartsModule } from './modules/carts/carts.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { RoleGuard } from './guards/role.guard';
+import { HealthModule } from './modules/health/health.module';
+import { TerminusModule } from '@nestjs/terminus';
 
 @Module({
   imports: [
@@ -44,11 +46,16 @@ import { RoleGuard } from './guards/role.guard';
         },
       ],
     }),
+    TerminusModule.forRoot({
+      errorLogStyle: 'json',
+      gracefulShutdownTimeoutMs: 1000,
+    }),
     CategoriesModule,
     CommonModule,
     ProductsModule,
     CartsModule,
     OrdersModule,
+    HealthModule,
   ],
   providers: [
     {
