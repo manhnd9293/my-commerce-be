@@ -5,6 +5,9 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { FileStorageService } from '../common/file-storage.service';
+import { UserAuth } from '../auth/jwt.strategy';
+import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
+import { v1 as uuid } from 'uuid';
 
 @Injectable()
 export class UsersService {
@@ -43,6 +46,7 @@ export class UsersService {
         id: true,
         email: true,
         cart: true,
+        avatarFileId: true,
       },
       relations: {
         cart: {
@@ -61,6 +65,32 @@ export class UsersService {
       cartItem.productVariant.product.thumbnailUrl =
         await this.fileStorageService.createPresignedUrl(productImage.assetId);
     }
+    if (userEntity.avatarFileId) {
+      userEntity.avatarUrl = await this.fileStorageService.createPresignedUrl(
+        userEntity.avatarFileId,
+      );
+    }
     return userEntity;
+  }
+
+  async updateAvatar(file: Express.Multer.File, user: UserAuth) {
+    const asset = await this.fileStorageService.saveFile(
+      file,
+      StorageTopLevelFolder.Users,
+      `${user.userId}/avatar/${file.originalname}.${file.mimetype}`,
+    );
+
+    await this.userRepository.update(
+      {
+        id: user.userId,
+      },
+      {
+        avatarFileId: asset.id,
+      },
+    );
+
+    return {
+      avatarUrl: await this.fileStorageService.createPresignedUrl(asset.id),
+    };
   }
 }
