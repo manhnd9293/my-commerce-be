@@ -93,4 +93,17 @@ export class UsersService {
       avatarUrl: await this.fileStorageService.createPresignedUrl(asset.id),
     };
   }
+
+  async deleteAvatar(user: UserAuth) {
+    await this.userRepository.update(
+      {
+        id: user.userId,
+      },
+      {
+        avatarFileId: null,
+      },
+    );
+
+    return 'done';
+  }
 }
