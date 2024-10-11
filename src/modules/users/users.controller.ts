@@ -8,6 +8,7 @@ import {
   ParseFilePipe,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import { UserAuth } from '../auth/jwt.strategy';
 import { UserEntity } from './entity/user.entity';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { PurchaseHistoryQueryDto } from './dto/purchase-history-query.dto';
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
@@ -56,5 +58,13 @@ export class UsersController {
   @Delete('avatar')
   deleteAvatar(@User() user: UserAuth) {
     return this.usersService.deleteAvatar(user);
+  }
+
+  @Get('/my-purchase')
+  getMyPurchase(
+    @Query() query: PurchaseHistoryQueryDto,
+    @User() user: UserAuth,
+  ) {
+    return this.usersService.getUserPurchaseHistory(query, user.userId);
   }
 }

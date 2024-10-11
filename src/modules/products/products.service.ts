@@ -140,6 +140,7 @@ export class ProductsService {
       .leftJoinAndSelect('product.productImages', 'productImages')
       .leftJoinAndSelect('productImages.asset', 'asset')
       .leftJoinAndSelect('product.productVariants', 'productVariants')
+      .addSelect('product.description')
       .getOne();
 
     if (!product) {

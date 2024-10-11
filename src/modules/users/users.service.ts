@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entity/user.entity';
 import { Repository } from 'typeorm';
@@ -8,12 +8,20 @@ import { FileStorageService } from '../common/file-storage.service';
 import { UserAuth } from '../auth/jwt.strategy';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 import { v1 as uuid } from 'uuid';
+import { OrderEntity } from '../orders/entities/order.entity';
+import { OrderItemEntity } from '../orders/entities/order-item.entity';
+import { PurchaseHistoryQueryDto } from './dto/purchase-history-query.dto';
+import { PageData } from '../../utils/common/page-data';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(OrderEntity)
+    private readonly orderRepository: Repository<OrderEntity>,
+    @InjectRepository(OrderItemEntity)
+    private readonly orderItemRepository: Repository<OrderItemEntity>,
     private readonly fileStorageService: FileStorageService,
   ) {}
 
@@ -105,5 +113,47 @@ export class UsersService {
     );
 
     return 'done';
+  }
+
+  async getUserPurchaseHistory(
+    query: PurchaseHistoryQueryDto,
+    userId: number,
+  ): Promise<PageData<OrderItemEntity>> {
+    const { page, pageSize, order, sortBy, search } = query;
+    const qb = this.orderItemRepository.createQueryBuilder('item');
+    qb.leftJoinAndSelect('item.productVariant', 'productVariant');
+    qb.leftJoinAndSelect('productVariant.product', 'product');
+    qb.leftJoinAndSelect('product.productImages', 'productImages');
+    qb.leftJoinAndSelect('item.order', 'order');
+    qb.andWhere('order.user_id = :userId', { userId });
+    search &&
+      qb.andWhere('LOWER(product.name) like :searchTerm', {
+        searchTerm: `%${search.toLowerCase()}%`,
+      });
+    const countItem = await qb.getCount();
+
+    const sortField = sortBy ? `item.${sortBy}` : 'item.createdAt';
+    qb.orderBy(sortField, order);
+
+    qb.skip((page - 1) * pageSize);
+    qb.take(pageSize);
+
+    const orderItemEntities = await qb.getMany();
+
+    for (const item of orderItemEntities) {
+      const product = item.productVariant.product;
+      product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+        product.productImages[0].assetId,
+      );
+    }
+
+    const result: PageData<OrderItemEntity> = {
+      data: orderItemEntities,
+      page,
+      pageSize,
+      totalPage: Math.ceil(countItem / pageSize),
+    };
+
+    return result;
   }
 }
