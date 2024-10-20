@@ -29,7 +29,7 @@ export class FileStorageService {
   async saveFile(
     file: Express.Multer.File,
     topLevelFolder: StorageTopLevelFolder = StorageTopLevelFolder.Others,
-    fileName: string,
+    fileName?: string,
   ) {
     const storageFileName = fileName ? fileName : `${uuid()}.${file.mimetype}`;
     const key = `${topLevelFolder}/${storageFileName}`;
@@ -63,7 +63,7 @@ export class FileStorageService {
       Key: asset.s3Key,
     });
 
-    return getSignedUrl(this.s3, command, { expiresIn: 3600 });
+    return getSignedUrl(this.s3, command, { expiresIn: 10000 });
   }
 
   async deleteAsset(assetId: number) {

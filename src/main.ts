@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { initializeTransactionalContext } from 'typeorm-transactional';
+import helmet from 'helmet';
 
 async function bootstrap() {
   initializeTransactionalContext();
@@ -14,7 +15,11 @@ async function bootstrap() {
     origin: configService.get('appUrl'),
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   const documentConfig = new DocumentBuilder()
     .setTitle('My Commerce API')
     .setDescription('API for My Commerce Application')
@@ -29,6 +34,8 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   });
+
+  app.use(helmet());
 
   await app.listen(configService.get('port'));
 }

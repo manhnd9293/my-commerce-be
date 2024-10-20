@@ -26,6 +26,11 @@ export class AuthService {
       where: {
         email,
       },
+      select: {
+        password: true,
+        id: true,
+        email: true,
+      },
     });
     if (!userEntity) {
       throw new HttpException('User email not exists', HttpStatus.NOT_FOUND);

@@ -1,13 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderEntity } from './entities/order.entity';
-import { In, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 import { OrderItemEntity } from './entities/order-item.entity';
 import { CartItemEntity } from '../carts/entities/cart-item.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Transactional } from 'typeorm-transactional';
 import { UserAuth } from '../auth/jwt.strategy';
 import { ProductVariant } from '../products/entities/product-variant.entity';
+import { FileStorageService } from '../common/file-storage.service';
+import { OrderQueryDto } from './dto/order-query.dto';
+import { PageData } from '../../utils/common/page-data';
+import { UserRole } from '../../utils/enums/user-role';
 
 @Injectable()
 export class OrdersService {
@@ -20,6 +29,7 @@ export class OrdersService {
     private readonly cartItemRepository: Repository<CartItemEntity>,
     @InjectRepository(ProductVariant)
     private readonly productVariantRepository: Repository<ProductVariant>,
+    private readonly fileStorageService: FileStorageService,
   ) {}
 
   @Transactional()
@@ -102,5 +112,86 @@ export class OrdersService {
         orderItems: true,
       },
     });
+  }
+
+  async getOrders(query: OrderQueryDto) {
+    const { userId, page, pageSize, search, sortBy, order } = query;
+
+    const qb = this.orderRepository.createQueryBuilder('od');
+    qb.leftJoinAndSelect('od.orderItems', 'orderItems');
+    qb.leftJoinAndSelect('orderItems.productVariant', 'productVariant');
+    qb.leftJoinAndSelect('productVariant.product', 'product');
+    qb.leftJoinAndSelect('product.productImages', 'productImages');
+    qb.leftJoinAndSelect('od.user', 'user');
+    userId && qb.andWhere('od.user_id = :userId', { userId });
+    search &&
+      qb.andWhere(
+        new Brackets((sub) => {
+          const searchTerm = `%${search}%`;
+          sub
+            .where(`od.id::text like :orderIdSearch`, {
+              orderIdSearch: searchTerm,
+            })
+            .orWhere(`user.email like :searchEmail`, {
+              searchEmail: searchTerm,
+            })
+            .orWhere('LOWER(product.name) like :searchProductName', {
+              searchProductName: searchTerm,
+            });
+        }),
+      );
+    const total = await qb.getCount();
+
+    qb.orderBy(`od.${sortBy}`, order);
+
+    qb.skip((page - 1) * pageSize);
+    qb.take(pageSize);
+
+    const orderEntities = await qb.getMany();
+
+    const pageData: PageData<OrderEntity> = {
+      data: orderEntities,
+      page,
+      pageSize,
+      totalPage: Math.ceil(total / pageSize),
+    };
+
+    return pageData;
+  }
+
+  async getOrderDetail(id: number, user: UserAuth) {
+    const orderEntity = await this.orderRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        orderItems: {
+          productVariant: {
+            product: {
+              productImages: true,
+            },
+            productColor: true,
+            productSize: true,
+          },
+        },
+      },
+    });
+
+    if (!orderEntity) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (user.role !== UserRole.Admin && user.userId !== orderEntity.userId) {
+      throw new ForbiddenException('Not allow to see order detail');
+    }
+
+    for (const item of orderEntity.orderItems) {
+      item.productVariant.product.thumbnailUrl =
+        await this.fileStorageService.createPresignedUrl(
+          item.productVariant.product.productImages[0].assetId,
+        );
+    }
+
+    return orderEntity;
   }
 }

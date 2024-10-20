@@ -1,5 +1,4 @@
 import * as process from 'node:process';
-import * as fs from 'node:fs';
 
 export default () => ({
   port: parseInt(process.env.PORT, 10) || 3000,
@@ -10,7 +9,7 @@ export default () => ({
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
-    entities: ['dist/**/*.entity{.ts,.js}'],
+    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     synchronize: process.env.NODE_ENV !== 'production',
     ssl: {
       // rejectUnauthorized: true,

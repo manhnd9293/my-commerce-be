@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../users/entity/user.entity';
 import { Repository } from 'typeorm';
+import { UserRole } from '../../utils/enums/user-role';
 
 export interface JwtPayload {
   sub: number;
@@ -14,6 +15,7 @@ export interface JwtPayload {
 export interface UserAuth {
   userId: number;
   email: string;
+  role: UserRole;
 }
 
 export const JWT_STRATEGY = 'jwt-strategy';
@@ -33,15 +35,23 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY) {
   }
 
   async validate(payload: JwtPayload): Promise<UserAuth> {
-    const check = await this.userRepository.findOne({
+    if (!payload.email) {
+      throw new UnauthorizedException('Email not provided');
+    }
+
+    const currentUser = await this.userRepository.findOne({
       where: {
         email: payload.email,
       },
     });
-    if (!check) {
+    if (!currentUser) {
       throw new UnauthorizedException('User not exist');
     }
 
-    return { userId: payload.sub, email: payload.email };
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      role: currentUser.role,
+    };
   }
 }

@@ -18,7 +18,7 @@ export class Product extends AbstractBaseEntity {
   @IsString()
   @MaxLength(50000)
   @IsOptional()
-  @Column({ name: 'description', type: 'text', nullable: true })
+  @Column({ name: 'description', type: 'text', nullable: true, select: false })
   description: string;
 
   @OneToMany(() => ProductSize, (ps) => ps.product, {

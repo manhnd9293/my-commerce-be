@@ -10,16 +10,13 @@ import { ProductVariant } from './entities/product-variant.entity';
 import { UserAuth } from '../auth/jwt.strategy';
 import { Category } from '../categories/entities/category.entity';
 import { Transactional } from 'typeorm-transactional';
-import {
-  DEFAULT_COLOR,
-  DEFAULT_COLOR_CODE,
-  DEFAULT_SIZE,
-} from '../../utils/constants/constant';
 import { FileStorageService } from '../common/file-storage.service';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 import { v4 as uuidv4 } from 'uuid';
 import { ProductImage } from './entities/product-image.entity';
-import { use } from 'passport';
+import { ProductQueryDto } from './dto/product-query.dto';
+import { BaseQueryDto } from '../../utils/common/base-query.dto';
+import { PageData } from '../../utils/common/page-data';
 
 @Injectable()
 export class ProductsService {
@@ -58,29 +55,35 @@ export class ProductsService {
     });
     const newProduct = await this.productRepository.save(product);
 
-    const productColors = (
-      createProductDto.productColors || [
-        { name: DEFAULT_COLOR, code: DEFAULT_COLOR_CODE },
-      ]
-    ).map((pc) => {
-      const productColor = this.productColorRepository.create(pc);
-      productColor.productId = newProduct.id;
-      return productColor;
-    });
-    const newColors = await this.productColorRepository.save(productColors);
+    let newColors = null;
+    if (
+      createProductDto.productColors &&
+      createProductDto.productColors.length > 0
+    ) {
+      const productColors = createProductDto.productColors.map((pc) => {
+        const productColor = this.productColorRepository.create(pc);
+        productColor.productId = newProduct.id;
+        return productColor;
+      });
+      newColors = await this.productColorRepository.save(productColors);
+    }
 
-    const productSizes = (
-      createProductDto.productSizes || [{ name: DEFAULT_SIZE }]
-    ).map((ps) => {
-      const productSize = this.productSizeRepository.create(ps);
-      productSize.productId = newProduct.id;
-      return productSize;
-    });
-    const newSizes = await this.productSizeRepository.save(productSizes);
+    let newSizes = null;
+    if (
+      createProductDto.productSizes &&
+      createProductDto.productSizes.length > 0
+    ) {
+      const productSizes = createProductDto.productSizes.map((ps) => {
+        const productSize = this.productSizeRepository.create(ps);
+        productSize.productId = newProduct.id;
+        return productSize;
+      });
+      newSizes = await this.productSizeRepository.save(productSizes);
+    }
 
     const variants = [];
-    for (const color of newColors) {
-      for (const size of newSizes) {
+    for (const color of newColors || [null]) {
+      for (const size of newSizes || [null]) {
         const productVariant = this.productVariantRepository.create();
         productVariant.productColorId = color.id;
         productVariant.productSizeId = size.id;
@@ -104,15 +107,19 @@ export class ProductsService {
     });
   }
 
-  async findAll() {
-    const products = await this.productRepository
+  async findAll(query: ProductQueryDto) {
+    const { categoryId } = query;
+    const queryBuilder = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.productSizes', 'productSizes')
       .leftJoinAndSelect('product.productColors', 'productColors')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
-      .leftJoinAndSelect('productImages.asset', 'asset')
-      .getMany();
+      .leftJoinAndSelect('productImages.asset', 'asset');
+    if (categoryId) {
+      queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+    }
+    const products = await queryBuilder.getMany();
 
     for (const product of products) {
       product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
@@ -133,11 +140,15 @@ export class ProductsService {
       .leftJoinAndSelect('product.productImages', 'productImages')
       .leftJoinAndSelect('productImages.asset', 'asset')
       .leftJoinAndSelect('product.productVariants', 'productVariants')
+      .addSelect('product.description')
       .getOne();
 
     if (!product) {
       throw new BadRequestException('Product not found');
     }
+    product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+      product.productImages[0].assetId,
+    );
     if (product.productImages) {
       for (const productImage of product.productImages) {
         const preSignUrl = await this.fileStorageService.createPresignedUrl(
@@ -259,7 +270,9 @@ export class ProductsService {
 
     const newProductVariants = [];
     for (const newSize of newProductSizes) {
-      for (const colorId of remainColorIds) {
+      for (const colorId of remainColorIds.length > 0
+        ? remainColorIds
+        : [null]) {
         newProductVariants.push(
           this.productVariantRepository.create({
             productSizeId: newSize.id,
@@ -272,7 +285,7 @@ export class ProductsService {
     }
 
     for (const newColor of newProductColors) {
-      for (const sizeId of remainSizeIds) {
+      for (const sizeId of remainSizeIds.length > 0 ? remainSizeIds : [null]) {
         newProductVariants.push(
           this.productVariantRepository.create({
             productId: updateProductDto.id,
@@ -347,5 +360,43 @@ export class ProductsService {
 
   remove(id: number) {
     return `This action removes a #${id} product`;
+  }
+
+  async findSimilarProducts(productId: number, query: BaseQueryDto) {
+    const { page, pageSize } = query;
+    const currentProduct = await this.productRepository.findOne({
+      where: { id: productId },
+    });
+
+    const qb = this.productRepository.createQueryBuilder('product');
+    qb.andWhere('product.categoryId = :currentCategoryId', {
+      currentCategoryId: currentProduct.categoryId,
+    });
+    qb.andWhere('product.id != :currentId', { currentId: currentProduct.id });
+    qb.leftJoinAndSelect('product.productImages', 'productImages');
+    const total = await qb.getCount();
+    qb.addSelect('abs(product.price - :currentPrice)', 'diff').setParameter(
+      'currentPrice',
+      currentProduct.price,
+    );
+    qb.orderBy('diff', 'ASC');
+    qb.skip((query.page - 1) * query.pageSize);
+    qb.take(query.pageSize);
+    const products = await qb.getMany();
+
+    for (const p of products) {
+      p.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+        p.productImages[0].assetId,
+      );
+    }
+
+    const response: PageData<Product> = {
+      data: products,
+      page,
+      pageSize,
+      totalPage: Math.ceil(total / query.pageSize),
+    };
+
+    return response;
   }
 }

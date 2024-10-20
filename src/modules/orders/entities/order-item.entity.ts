@@ -3,6 +3,7 @@ import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
 import { ProductVariant } from '../../products/entities/product-variant.entity';
 import { OrderEntity } from './order.entity';
 import { IsNotEmpty } from 'class-validator';
+import { OrderItemState } from '../../../utils/enums/order-item-state';
 
 @Entity('order_items')
 export class OrderItemEntity extends AbstractBaseEntity {
@@ -34,4 +35,11 @@ export class OrderItemEntity extends AbstractBaseEntity {
     referencedColumnName: 'id',
   })
   order: OrderEntity;
+
+  @Column({
+    default: OrderItemState.Preparing,
+    enum: OrderItemState,
+    type: 'enum',
+  })
+  state: OrderItemState;
 }
