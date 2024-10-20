@@ -8,6 +8,9 @@ This project is the backend of a small ecommerce system. Some main features that
 * Order management
 * Customer purchase flow including view product details, add product to cart and checkout
 
+### Demo link: https://ecommerce.manhnd.men
+
+
 ## Architecture
 The diagram below show overview architecture of the entire system
 
