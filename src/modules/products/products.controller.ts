@@ -20,6 +20,7 @@ import { UserAuth } from '../auth/jwt.strategy';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { BaseQueryDto } from '../../utils/common/base-query.dto';
+import { Public } from '../../decorators/public.decorator';
 
 @Controller('products')
 @ApiTags('Products')
@@ -34,15 +35,18 @@ export class ProductsController {
   }
 
   @Get()
+  @Public()
   findAll(@Query() query: ProductQueryDto) {
     return this.productsService.findAll(query);
   }
 
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(+id);
   }
 
+  @Public()
   @Get(':id/similar')
   findSimilarProducts(@Param('id') id: string, @Query() query: BaseQueryDto) {
     return this.productsService.findSimilarProducts(+id, query);
