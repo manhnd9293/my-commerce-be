@@ -12,6 +12,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ListId } from './dto/list-id.dto';
+import { Public } from '../../decorators/public.decorator';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -24,6 +25,7 @@ export class CategoriesController {
     return this.categoriesService.create(createCategoryDto);
   }
 
+  @Public()
   @Get()
   findAll() {
     return this.categoriesService.findAll();
