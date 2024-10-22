@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entity/user.entity';
 import { Repository } from 'typeorm';
@@ -7,11 +13,13 @@ import * as bcrypt from 'bcrypt';
 import { FileStorageService } from '../common/file-storage.service';
 import { UserAuth } from '../auth/jwt.strategy';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
-import { v1 as uuid } from 'uuid';
 import { OrderEntity } from '../orders/entities/order.entity';
 import { OrderItemEntity } from '../orders/entities/order-item.entity';
 import { PurchaseHistoryQueryDto } from './dto/purchase-history-query.dto';
 import { PageData } from '../../utils/common/page-data';
+import { CreateUserAddressDto } from './dto/user-address/create-user-address.dto';
+import { UserAddressEntity } from './entity/user-address.entity';
+import { UpdateUserAddressDto } from './dto/user-address/update-user-address.dto';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +30,9 @@ export class UsersService {
     private readonly orderRepository: Repository<OrderEntity>,
     @InjectRepository(OrderItemEntity)
     private readonly orderItemRepository: Repository<OrderItemEntity>,
+    @InjectRepository(UserAddressEntity)
+    private readonly userAddressRepository: Repository<UserAddressEntity>,
+
     private readonly fileStorageService: FileStorageService,
   ) {}
 
@@ -155,5 +166,78 @@ export class UsersService {
     };
 
     return result;
+  }
+
+  createUserAddress(
+    data: CreateUserAddressDto,
+    user: UserAuth,
+  ): Promise<UserAddressEntity> {
+    const userAddressEntity = this.userAddressRepository.create({
+      ...data,
+      userId: user.userId,
+    });
+    return this.userAddressRepository.save(userAddressEntity);
+  }
+
+  async updateUserAddress(
+    addressId: number,
+    data: UpdateUserAddressDto,
+    user: UserAuth,
+  ): Promise<UserAddressEntity> {
+    const userAddressEntity = await this.validateUserAndAddress(
+      addressId,
+      user,
+    );
+
+    await this.userAddressRepository.update(
+      {
+        id: addressId,
+      },
+      {
+        ...userAddressEntity,
+        ...data,
+      },
+    );
+
+    return this.userAddressRepository.findOne({
+      where: {
+        id: addressId,
+      },
+    });
+  }
+
+  async deleteAddress(addressId: number, user: UserAuth) {
+    await this.validateUserAndAddress(addressId, user);
+    await this.userAddressRepository.delete({
+      id: addressId,
+    });
+
+    return 'success';
+  }
+
+  private async validateUserAndAddress(addressId: number, user: UserAuth) {
+    const userAddressEntity = await this.userAddressRepository.findOne({
+      where: {
+        id: addressId,
+      },
+    });
+    if (!userAddressEntity) {
+      throw new NotFoundException('Address not found');
+    }
+    if (user.userId !== userAddressEntity.userId) {
+      throw new ForbiddenException('user is not allowed to update address');
+    }
+    return userAddressEntity;
+  }
+
+  getUserAddresses(user: UserAuth): Promise<UserAddressEntity[]> {
+    return this.userAddressRepository.find({
+      where: {
+        userId: user.userId,
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
   }
 }

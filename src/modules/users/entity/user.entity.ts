@@ -10,6 +10,7 @@ import { CartItemEntity } from '../../carts/entities/cart-item.entity';
 import { OrderEntity } from '../../orders/entities/order.entity';
 import { UserRole } from '../../../utils/enums/user-role';
 import { Asset } from '../../common/entities/asset.entity';
+import { UserAddressEntity } from './user-address.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -47,4 +48,7 @@ export class UserEntity {
   avatar: Asset;
 
   avatarUrl: string;
+
+  @OneToMany(() => UserAddressEntity, (ua) => ua.user)
+  addresses: UserAddressEntity[];
 }

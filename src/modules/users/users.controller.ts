@@ -5,9 +5,11 @@ import {
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
   Patch,
   Post,
+  Put,
   Query,
   UploadedFile,
   UseInterceptors,
@@ -21,6 +23,11 @@ import { UserEntity } from './entity/user.entity';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PurchaseHistoryQueryDto } from './dto/purchase-history-query.dto';
+import { CreateUserAddressDto } from './dto/user-address/create-user-address.dto';
+import { UpdateUserAddressDto } from './dto/user-address/update-user-address.dto';
+import { UserAddressEntity } from './entity/user-address.entity';
+import { PageData } from '../../utils/common/page-data';
+import { OrderItemEntity } from '../orders/entities/order-item.entity';
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
@@ -64,7 +71,37 @@ export class UsersController {
   getMyPurchase(
     @Query() query: PurchaseHistoryQueryDto,
     @User() user: UserAuth,
-  ) {
+  ): Promise<PageData<OrderItemEntity>> {
     return this.usersService.getUserPurchaseHistory(query, user.userId);
+  }
+
+  @Post('/address')
+  addUserAddress(
+    @User() user: UserAuth,
+    @Body() data: CreateUserAddressDto,
+  ): Promise<UserAddressEntity> {
+    return this.usersService.createUserAddress(data, user);
+  }
+
+  @Put('/address/:addressId')
+  updateUserAddress(
+    @User() user: UserAuth,
+    @Param('addressId') addressId: string,
+    @Body() data: UpdateUserAddressDto,
+  ): Promise<UserAddressEntity> {
+    return this.usersService.updateUserAddress(Number(addressId), data, user);
+  }
+
+  @Delete('address/:addressId')
+  deleteUserAddress(
+    @User() user: UserAuth,
+    @Param('addressId') addressId: string,
+  ) {
+    return this.usersService.deleteAddress(Number(addressId), user);
+  }
+
+  @Get('address')
+  getUserAddresses(@User() user: UserAuth): Promise<UserAddressEntity[]> {
+    return this.usersService.getUserAddresses(user);
   }
 }
