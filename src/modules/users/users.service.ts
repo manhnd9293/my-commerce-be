@@ -20,6 +20,7 @@ import { PageData } from '../../utils/common/page-data';
 import { CreateUserAddressDto } from './dto/user-address/create-user-address.dto';
 import { UserAddressEntity } from './entity/user-address.entity';
 import { UpdateUserAddressDto } from './dto/user-address/update-user-address.dto';
+import { UpdateUserGeneralInfoDto } from './dto/update-user-general-info.dto';
 
 @Injectable()
 export class UsersService {
@@ -66,6 +67,9 @@ export class UsersService {
         email: true,
         cart: true,
         avatarFileId: true,
+        fullName: true,
+        dob: true,
+        phone: true,
       },
       relations: {
         cart: {
@@ -237,6 +241,23 @@ export class UsersService {
       },
       order: {
         createdAt: 'ASC',
+      },
+    });
+  }
+
+  async updateUserGeneralInfor(data: UpdateUserGeneralInfoDto, user: UserAuth) {
+    await this.userRepository.update(
+      {
+        id: user.userId,
+      },
+      {
+        ...data,
+      },
+    );
+
+    return this.userRepository.findOne({
+      where: {
+        id: user.userId,
       },
     });
   }

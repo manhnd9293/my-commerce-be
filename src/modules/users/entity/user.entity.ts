@@ -11,6 +11,16 @@ import { OrderEntity } from '../../orders/entities/order.entity';
 import { UserRole } from '../../../utils/enums/user-role';
 import { Asset } from '../../common/entities/asset.entity';
 import { UserAddressEntity } from './user-address.entity';
+import {
+  IsDate,
+  IsDateString,
+  IsOptional,
+  IsString,
+  MaxDate,
+  MaxLength,
+  MinDate,
+  MinLength,
+} from 'class-validator';
 
 @Entity('users')
 export class UserEntity {
@@ -37,7 +47,12 @@ export class UserEntity {
   })
   role: UserRole;
 
-  @Column({ name: 'avatar_file_id', nullable: true, type: 'bigint' })
+  @Column({
+    name: 'avatar_file_id',
+    nullable: true,
+    type: 'bigint',
+    select: false,
+  })
   avatarFileId: number;
 
   @ManyToOne(() => Asset)
@@ -51,4 +66,21 @@ export class UserEntity {
 
   @OneToMany(() => UserAddressEntity, (ua) => ua.user)
   addresses: UserAddressEntity[];
+
+  @Column({ name: 'full_name', type: 'varchar', length: 50, nullable: true })
+  @IsOptional()
+  @IsString()
+  fullName: string;
+
+  @Column({ name: 'dob', type: 'date', nullable: true })
+  @IsOptional()
+  @IsDateString()
+  dob: string;
+
+  @Column({ name: 'phone', type: 'varchar', nullable: true, length: 11 })
+  @IsOptional()
+  @IsString()
+  @MinLength(10)
+  @MaxLength(11)
+  phone: string;
 }
