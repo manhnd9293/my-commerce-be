@@ -28,6 +28,7 @@ import { UpdateUserAddressDto } from './dto/user-address/update-user-address.dto
 import { UserAddressEntity } from './entity/user-address.entity';
 import { PageData } from '../../utils/common/page-data';
 import { OrderItemEntity } from '../orders/entities/order-item.entity';
+import { UpdateUserGeneralInfoDto } from './dto/update-user-general-info.dto';
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
@@ -103,5 +104,13 @@ export class UsersController {
   @Get('address')
   getUserAddresses(@User() user: UserAuth): Promise<UserAddressEntity[]> {
     return this.usersService.getUserAddresses(user);
+  }
+
+  @Patch('/general-info')
+  updateUserGeneralInformation(
+    @User() user: UserAuth,
+    @Body() data: UpdateUserGeneralInfoDto,
+  ): Promise<UserEntity> {
+    return this.usersService.updateUserGeneralInfor(data, user);
   }
 }
