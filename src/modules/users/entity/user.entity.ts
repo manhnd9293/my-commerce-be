@@ -74,7 +74,7 @@ export class UserEntity {
 
   @Column({ name: 'dob', type: 'date', nullable: true })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   dob: string;
 
   @Column({ name: 'phone', type: 'varchar', nullable: true, length: 11 })

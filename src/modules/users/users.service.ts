@@ -81,6 +81,12 @@ export class UsersService {
             },
           },
         },
+        addresses: true,
+      },
+      order: {
+        addresses: {
+          createdAt: 'ASC',
+        },
       },
     });
     for (const cartItem of userEntity.cart) {
