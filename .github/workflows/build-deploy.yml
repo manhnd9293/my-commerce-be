@@ -1,0 +1,41 @@
+name: Build Docker Image CI
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: docker build -t manhnd9293/my-commerce-be .
+    - name: Login docker
+      env:
+        PASSWORD: ${{secrets.DOCKER_PWD}}
+      run: docker login -u manhnd9293 -p "$PASSWORD"
+    - name: Push to dockerhub
+      run: docker push manhnd9293/my-commerce-be
+
+  deploy:
+    needs: build-and-push
+    name: deploy image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: install ssh keys
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+      - name: connect and pull
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+          cd ${{ secrets.WORK_DIR }} 
+          docker compose down
+          docker compose up -d
+          docker restart proxy
+          docker image prune -af
+      - name: cleanup
+        run: rm -rf ~/.ssh
