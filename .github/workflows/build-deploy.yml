@@ -31,10 +31,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
       - name: connect and pull
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }}" 
-          docker compose down
-          docker compose up -d
-          docker restart proxy
-          docker image prune -af
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && bash deploy.sh" 
+
       - name: cleanup
         run: rm -rf ~/.ssh
