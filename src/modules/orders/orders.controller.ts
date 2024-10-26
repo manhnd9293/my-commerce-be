@@ -15,12 +15,14 @@ import { UserAuth } from '../auth/jwt.strategy';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
+import { Public } from '../../decorators/public.decorator';
 
 @Controller('orders')
 @ApiTags('Orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  @Public()
   @Post()
   createOrder(@Body() data: CreateOrderDto, @User() user: UserAuth) {
     return this.ordersService.createOrder(data, user);

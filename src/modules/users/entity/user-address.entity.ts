@@ -14,6 +14,9 @@ export class UserAddressEntity extends AbstractBaseEntity {
   })
   user: UserEntity;
 
+  @Column({ name: 'phone', type: 'varchar', nullable: true })
+  phone: string;
+
   @Column({ name: 'province', type: 'varchar', nullable: false })
   province: string;
 

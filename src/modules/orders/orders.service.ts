@@ -34,7 +34,15 @@ export class OrdersService {
 
   @Transactional()
   async createOrder(data: CreateOrderDto, user: UserAuth) {
-    const { orderItems } = data;
+    const {
+      orderItems,
+      customerName,
+      phone,
+      commune,
+      district,
+      province,
+      noAndStreet,
+    } = data;
     const deleteCartItemIds = [];
     for (const orderItem of orderItems) {
       const cartItemId = orderItem.cartItemId;
@@ -42,7 +50,7 @@ export class OrdersService {
         const cartItemEntity = await this.cartItemRepository.findOne({
           where: {
             id: cartItemId,
-            userId: user.userId,
+            userId: user ? user.userId : null,
           },
         });
         if (!cartItemEntity) {
@@ -90,9 +98,17 @@ export class OrdersService {
       return total;
     }, 0);
 
+    //todo: validate delivery address
+
     const orderEntity = this.orderRepository.create({
-      userId: user.userId,
+      userId: user ? user.userId : null,
       total: totalOrderValue,
+      customerName: data.customerName,
+      phone,
+      province,
+      district,
+      commune,
+      noAndStreet,
     });
 
     const savedOrder = await this.orderRepository.save(orderEntity);
