@@ -43,26 +43,28 @@ export class OrdersService {
       province,
       noAndStreet,
     } = data;
-    const deleteCartItemIds = [];
-    for (const orderItem of orderItems) {
-      const cartItemId = orderItem.cartItemId;
-      if (cartItemId) {
-        const cartItemEntity = await this.cartItemRepository.findOne({
-          where: {
-            id: cartItemId,
-            userId: user ? user.userId : null,
-          },
-        });
-        if (!cartItemEntity) {
-          throw new BadRequestException('Invalid cart item');
+    if (user) {
+      const deleteCartItemIds = [];
+      for (const orderItem of orderItems) {
+        const cartItemId = orderItem.cartItemId;
+        if (cartItemId) {
+          const cartItemEntity = await this.cartItemRepository.findOne({
+            where: {
+              id: cartItemId,
+              userId: user ? user.userId : null,
+            },
+          });
+          if (!cartItemEntity) {
+            throw new BadRequestException('Invalid cart item');
+          }
+          deleteCartItemIds.push(cartItemId);
         }
-        deleteCartItemIds.push(cartItemId);
       }
-    }
 
-    await this.cartItemRepository.softDelete({
-      id: In(deleteCartItemIds),
-    });
+      await this.cartItemRepository.softDelete({
+        id: In(deleteCartItemIds),
+      });
+    }
 
     const productVariantIds = new Set();
     const productVariantIdToQuantity = new Map();
@@ -103,7 +105,7 @@ export class OrdersService {
     const orderEntity = this.orderRepository.create({
       userId: user ? user.userId : null,
       total: totalOrderValue,
-      customerName: data.customerName,
+      customerName,
       phone,
       province,
       district,
