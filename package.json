@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && yarn sentry:sourcemaps",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -19,7 +19,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migrate:recover-product-color-id": "ts-node ./src/migration-data/recover-product-color",
-    "migrate:add-default-product-variant": "ts-node ./src/migration-data/add-default-product-variant.ts"
+    "migrate:add-default-product-variant": "ts-node ./src/migration-data/add-default-product-variant.ts",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org manh-nguyen --project my-commerce-be ./dist && sentry-cli sourcemaps upload --org manh-nguyen --project my-commerce-be ./dist"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.576.0",
@@ -35,6 +36,9 @@
     "@nestjs/terminus": "^10.2.3",
     "@nestjs/throttler": "^5.1.2",
     "@nestjs/typeorm": "^10.0.2",
+    "@sentry/cli": "^2.38.0",
+    "@sentry/nestjs": "^8.35.0",
+    "@sentry/profiling-node": "^8.35.0",
     "@types/bcrypt": "^5.0.2",
     "@types/uuid": "^10.0.0",
     "bcrypt": "^5.1.1",

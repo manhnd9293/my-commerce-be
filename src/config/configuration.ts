@@ -34,5 +34,6 @@ export default () => ({
     ttl: process.env.THROTTLE_TTL,
     limit: process.env.TROTTLE_LIMIT,
   },
+  sentryDsn: process.env.SENTRY_DSN,
   version: process.env.VERSION,
 });

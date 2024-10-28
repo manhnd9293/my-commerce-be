@@ -113,4 +113,10 @@ export class UsersController {
   ): Promise<UserEntity> {
     return this.usersService.updateUserGeneralInfor(data, user);
   }
+
+  @Public()
+  @Get('/debug-sentry')
+  getError() {
+    throw new Error('First sentry error');
+  }
 }

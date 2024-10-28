@@ -5,6 +5,9 @@ on:
 
 jobs:
   build-and-push:
+    env:
+      SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
+
     runs-on: ubuntu-latest
 
     steps:

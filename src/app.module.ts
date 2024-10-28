@@ -5,7 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseConfig } from './config/database.config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/jwt-auth.guard';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { CommonModule } from './modules/common/common.module';
@@ -18,11 +18,13 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { RoleGuard } from './guards/role.guard';
 import { HealthModule } from './modules/health/health.module';
 import { TerminusModule } from '@nestjs/terminus';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 
 @Module({
   imports: [
     AuthModule,
     UsersModule,
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
@@ -69,6 +71,10 @@ import { TerminusModule } from '@nestjs/terminus';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
     },
   ],
 })
