@@ -1,10 +1,12 @@
+ARG SENTRY_AUTH_TOKEN_ARG
+
 FROM node:20.10.0 AS dist
 COPY package.json ./
 
 RUN yarn install
 
 COPY . ./
-
+ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN_ARG
 RUN yarn build
 
 FROM node:20.10.0 AS node_modules

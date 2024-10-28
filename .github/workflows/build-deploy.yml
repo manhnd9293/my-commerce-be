@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build -t manhnd9293/my-commerce-be .
+      run: docker build -t manhnd9293/my-commerce-be --build-arg SENTRY_AUTH_TOKEN_ARG=${SENTRY_AUTH_TOKEN} .
     - name: Login docker
       env:
         PASSWORD: ${{secrets.DOCKER_PWD}}
