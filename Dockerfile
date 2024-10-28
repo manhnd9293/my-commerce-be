@@ -1,6 +1,7 @@
 ARG SENTRY_AUTH_TOKEN_ARG
 
 FROM node:20.10.0 AS dist
+ARG SENTRY_AUTH_TOKEN_ARG
 COPY package.json ./
 
 RUN yarn install
