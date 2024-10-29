@@ -115,8 +115,8 @@ export class UsersController {
   }
 
   @Public()
-  @Get('/debug-sentry')
+  @Get('/debug-sentry-new')
   getError() {
-    throw new Error('First sentry error');
+    throw new Error('New sentry error');
   }
 }
