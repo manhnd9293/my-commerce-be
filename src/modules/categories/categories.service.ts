@@ -4,12 +4,15 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { In, Repository } from 'typeorm';
+import { FileStorageService } from '../common/file-storage.service';
+import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    private readonly fileStorageService: FileStorageService,
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
@@ -27,23 +30,46 @@ export class CategoriesService {
     return this.categoryRepository.save(category);
   }
 
-  findAll() {
-    return this.categoryRepository.find({
+  async findAll() {
+    const categories = await this.categoryRepository.find({
       order: {
         createdAt: 'ASC',
       },
+      relations: {
+        imageFile: true,
+      },
     });
+    for (const category of categories) {
+      category.imageFileUrl = await this.fileStorageService.createPresignedUrl(
+        category.imageFileId,
+      );
+    }
+
+    return categories;
   }
 
-  findOne(id: number): Promise<Category | null> {
-    return this.categoryRepository.findOne({
+  async findOne(id: number): Promise<Category | null> {
+    const category = await this.categoryRepository.findOne({
       where: {
         id,
       },
+      relations: {
+        imageFile: true,
+      },
     });
+    if (category.imageFile) {
+      category.imageFileUrl = await this.fileStorageService.createPresignedUrl(
+        category.imageFileId,
+      );
+    }
+    return category;
   }
 
-  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
+  async update(
+    id: number,
+    updateCategoryDto: UpdateCategoryDto,
+    imageFile: Express.Multer.File,
+  ) {
     const category = await this.categoryRepository.findOne({
       where: {
         id,
@@ -66,6 +92,14 @@ export class CategoriesService {
       throw new BadRequestException('Category not found');
     }
     this.categoryRepository.merge(category, updateCategoryDto);
+    if (imageFile) {
+      const asset = await this.fileStorageService.saveFile(
+        imageFile,
+        StorageTopLevelFolder.Categories,
+        `${id}/${imageFile.originalname}`,
+      );
+      category.imageFileId = asset.id;
+    }
     return this.categoryRepository.save(category);
   }
 
