@@ -19,6 +19,7 @@ import { RoleGuard } from './guards/role.guard';
 import { HealthModule } from './modules/health/health.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
+import * as process from 'node:process';
 
 @Module({
   imports: [
@@ -72,10 +73,14 @@ import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    {
-      provide: APP_FILTER,
-      useClass: SentryGlobalFilter,
-    },
+    ...(process.env.NODE_ENV !== 'local'
+      ? [
+          {
+            provide: APP_FILTER,
+            useClass: SentryGlobalFilter,
+          },
+        ]
+      : []),
   ],
 })
 export class AppModule {}

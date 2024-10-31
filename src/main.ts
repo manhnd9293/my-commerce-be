@@ -1,12 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import helmet from 'helmet';
 import './config/sentry/instrument';
+import * as process from 'node:process';
 async function bootstrap() {
+  const logger = new Logger('Main');
   initializeTransactionalContext();
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
@@ -37,7 +39,11 @@ async function bootstrap() {
 
   app.use(helmet());
 
-  await app.listen(configService.get('port'));
+  await app.listen(configService.get('port'), () => {
+    logger.log(
+      `Server is running on port ${process.env.PORT}, in ${process.env.NODE_ENV} env`,
+    );
+  });
 }
 
 bootstrap();

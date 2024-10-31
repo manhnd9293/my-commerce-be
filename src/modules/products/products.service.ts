@@ -85,8 +85,8 @@ export class ProductsService {
     for (const color of newColors || [null]) {
       for (const size of newSizes || [null]) {
         const productVariant = this.productVariantRepository.create();
-        productVariant.productColorId = color.id;
-        productVariant.productSizeId = size.id;
+        productVariant.productColorId = color?.id || null;
+        productVariant.productSizeId = size?.id || null;
         productVariant.productId = newProduct.id;
         variants.push(productVariant);
       }
@@ -115,7 +115,11 @@ export class ProductsService {
       .leftJoinAndSelect('product.productColors', 'productColors')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
-      .leftJoinAndSelect('productImages.asset', 'asset');
+      .leftJoinAndSelect('productImages.asset', 'asset')
+      .orderBy({
+        'product.createdAt': 'ASC',
+        'productImages.id': 'ASC',
+      });
     if (categoryId) {
       queryBuilder.andWhere('category.id = :categoryId', { categoryId });
     }
@@ -141,6 +145,7 @@ export class ProductsService {
       .leftJoinAndSelect('productImages.asset', 'asset')
       .leftJoinAndSelect('product.productVariants', 'productVariants')
       .addSelect('product.description')
+      .orderBy('productImages.id', 'ASC')
       .getOne();
 
     if (!product) {
