@@ -108,30 +108,43 @@ export class ProductsService {
   }
 
   async findAll(query: ProductQueryDto) {
-    const { categoryId } = query;
+    const { categoryId, search, page, pageSize } = query;
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.productSizes', 'productSizes')
       .leftJoinAndSelect('product.productColors', 'productColors')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
-      .leftJoinAndSelect('productImages.asset', 'asset')
-      .orderBy({
-        'product.createdAt': 'ASC',
-        'productImages.id': 'ASC',
-      });
+      .leftJoinAndSelect('productImages.asset', 'asset');
+
     if (categoryId) {
       queryBuilder.andWhere('category.id = :categoryId', { categoryId });
     }
-    const products = await queryBuilder.getMany();
+    if (search) {
+      queryBuilder.andWhere('LOWER(product.name) like :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+    const count = await queryBuilder.getCount();
+    queryBuilder.orderBy('product.createdAt', 'ASC');
+    // queryBuilder.addOrderBy('productImages.id', 'ASC');
 
+    queryBuilder.skip((page - 1) * pageSize);
+    queryBuilder.take(pageSize);
+    const products = await queryBuilder.getMany();
+    const pageData: PageData<Product> = {
+      data: products,
+      page,
+      pageSize,
+      totalPage: Math.ceil(count / pageSize),
+    };
     for (const product of products) {
       product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
         product.productImages[0].assetId,
       );
     }
 
-    return products;
+    return pageData;
   }
 
   async findOne(id: number) {
