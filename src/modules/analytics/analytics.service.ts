@@ -6,6 +6,7 @@ import {
 import {
   DashboardDataDto,
   DataPoint,
+  RecentSaleData,
   TopSellCategoryData,
   TopSellProductData,
 } from './dto/dashboard/dashboard-data.dto';
@@ -331,6 +332,59 @@ export class AnalyticsService {
       category: idToCategory.get(result['cid']),
       saleValue: parseInt(result['sale_value']),
       valueChange: 0,
+    }));
+  }
+
+  private async getRecentSaleProduct(
+    startTime: Date,
+    endTime: Date,
+    take: number,
+  ): Promise<RecentSaleData[]> {
+    const qb = this.orderItemRepository.createQueryBuilder('orderItems');
+    qb.andWhere('orderItems.createdAt >= :startTime', { startTime })
+      .andWhere('orderItems.createdAt <= :endTime', { endTime })
+      .leftJoin('orderItems.productVariant', 'productVariant')
+      .leftJoin('productVariant.product', 'product')
+      .groupBy('productVariant.id')
+      .select(
+        'productVariant.id pvi, MAX(orderItems.createdAt) as purchased_time',
+      )
+      .orderBy('purchased_time', 'DESC')
+      .take(take);
+
+    const queryResults = await qb.getRawMany();
+
+    const idToProductVariant = new Map();
+
+    const productVariants = await this.productVariantRepository.find({
+      where: {
+        id: In(queryResults.map((res) => res['pvi'])),
+      },
+      relations: {
+        product: {
+          productImages: true,
+        },
+      },
+      order: {
+        product: {
+          productImages: {
+            id: 'ASC',
+          },
+        },
+      },
+    });
+
+    for (const pv of productVariants) {
+      idToProductVariant.set(pv.id, productVariants);
+      pv.product.thumbnailUrl =
+        await this.fileStorageService.createPresignedUrl(
+          pv.product.productImages[0].assetId,
+        );
+    }
+
+    return queryResults.map((result) => ({
+      productVariant: idToProductVariant.get(result['pvi']),
+      quantity: 0,
     }));
   }
 }
