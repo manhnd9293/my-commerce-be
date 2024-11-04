@@ -161,7 +161,11 @@ export class AnalyticsService {
 
     for (const item of result) {
       // @ts-ignore
-      chartData[parseInt(item['time'])]['yValue'] = item['total'];
+      const rawYValue = item['total'] as number;
+      // @ts-ignore
+      chartData[parseInt(item['time'])]['yValue'] = Math.floor(
+        rawYValue / 1000,
+      );
     }
 
     return chartData;
@@ -283,7 +287,7 @@ export class AnalyticsService {
     });
 
     for (const pv of productVariants) {
-      idToProductVariant.set(pv.id, productVariants);
+      idToProductVariant.set(pv.id, pv);
       pv.product.thumbnailUrl =
         await this.fileStorageService.createPresignedUrl(
           pv.product.productImages[0].assetId,
