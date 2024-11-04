@@ -33,7 +33,7 @@ export class OrdersService {
   ) {}
 
   @Transactional()
-  async createOrder(data: CreateOrderDto, user: UserAuth) {
+  async createOrder(data: CreateOrderDto, user?: UserAuth) {
     const {
       orderItems,
       customerName,

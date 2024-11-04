@@ -22,10 +22,15 @@ import { Public } from '../../decorators/public.decorator';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Public()
   @Post()
   createOrder(@Body() data: CreateOrderDto, @User() user: UserAuth) {
     return this.ordersService.createOrder(data, user);
+  }
+
+  @Public()
+  @Post('no-auth')
+  createOrderWithoutAuth(@Body() data: CreateOrderDto) {
+    return this.ordersService.createOrder(data);
   }
 
   @Get('')

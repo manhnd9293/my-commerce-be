@@ -19,6 +19,7 @@ import { RoleGuard } from './guards/role.guard';
 import { HealthModule } from './modules/health/health.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 import * as process from 'node:process';
 
 @Module({
@@ -59,6 +60,7 @@ import * as process from 'node:process';
     CartsModule,
     OrdersModule,
     HealthModule,
+    AnalyticsModule,
   ],
   providers: [
     {
