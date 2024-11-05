@@ -21,6 +21,8 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { BaseQueryDto } from '../../utils/common/base-query.dto';
 import { Public } from '../../decorators/public.decorator';
+import { Roles } from '../../decorators/roles.decorator';
+import { UserRole } from '../../utils/enums/user-role';
 
 @Controller('products')
 @ApiTags('Products')
@@ -36,8 +38,13 @@ export class ProductsController {
 
   @Get()
   @Public()
-  findAll(@Query() query: ProductQueryDto) {
-    return this.productsService.findAll(query);
+  getProductPage(@Query() query: ProductQueryDto) {
+    return this.productsService.findPage(query);
+  }
+  @Get('/all')
+  @Roles([UserRole.Admin])
+  findAll() {
+    return this.productsService.findAll();
   }
 
   @Public()

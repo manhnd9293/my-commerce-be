@@ -107,7 +107,27 @@ export class ProductsService {
     });
   }
 
-  async findAll(query: ProductQueryDto) {
+  async findAll() {
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.productSizes', 'productSizes')
+      .leftJoinAndSelect('product.productColors', 'productColors')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.productImages', 'productImages')
+      .leftJoinAndSelect('productImages.asset', 'asset');
+    queryBuilder.orderBy('product.createdAt', 'ASC');
+
+    const products = await queryBuilder.getMany();
+    for (const product of products) {
+      product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+        product.productImages[0].assetId,
+      );
+    }
+
+    return products;
+  }
+
+  async findPage(query: ProductQueryDto) {
     const { categoryId, search, page, pageSize } = query;
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
