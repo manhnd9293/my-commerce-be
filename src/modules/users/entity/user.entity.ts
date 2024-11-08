@@ -99,4 +99,7 @@ export class UserEntity {
     nullable: true,
   })
   deletedAt: Date;
+
+  @Column({ name: 'google_id', type: 'text', nullable: true })
+  googleId: string;
 }

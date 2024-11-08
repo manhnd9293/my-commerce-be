@@ -12,19 +12,25 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../users/entity/user.entity';
 import { Repository } from 'typeorm';
 import { FileStorageService } from '../common/file-storage.service';
+import * as process from 'node:process';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
+  private readonly googleClient: OAuth2Client;
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @InjectRepository(UserEntity)
-    private readonly userEntityRepository: Repository<UserEntity>,
+    private readonly userRepository: Repository<UserEntity>,
     private readonly fileStorageService: FileStorageService,
-  ) {}
+  ) {
+    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
 
   async signIn(email: string, password: string) {
-    const userEntity = await this.userEntityRepository.findOne({
+    const userEntity = await this.userRepository.findOne({
       where: {
         email,
       },
@@ -59,6 +65,58 @@ export class AuthService {
 
     return {
       ...userEntity,
+      accessToken,
+    };
+  }
+
+  async googleSignIn(googleToken: string) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const ticket = await this.googleClient.verifyIdToken({
+      audience: clientId,
+      idToken: googleToken,
+    });
+    const payload = ticket.getPayload();
+    const googleId = payload['sub'] as string;
+    const email = payload['email'] as string;
+    const aud = payload['aud'] as string;
+    if (aud !== clientId) {
+      throw new BadRequestException('Token is not of this app');
+    }
+
+    let user = await this.userRepository.findOne({
+      where: { googleId },
+    });
+
+    if (!user) {
+      user = await this.userRepository.findOne({
+        where: { email },
+      });
+    }
+
+    if (!user) {
+      throw new BadRequestException('Email is not registered yet');
+    }
+
+    if (!user.googleId) {
+      user.googleId = googleId;
+      await this.userRepository.save(user);
+    }
+
+    const jwtPayload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+    };
+    const accessToken = await this.jwtService.signAsync(jwtPayload, {
+      secret: this.configService.get('jwt.secret'),
+    });
+
+    delete user.password;
+    user.avatarUrl = user.avatarFileId
+      ? await this.fileStorageService.createPresignedUrl(user.avatarFileId)
+      : null;
+
+    return {
+      ...user,
       accessToken,
     };
   }

@@ -16,4 +16,11 @@ export class AuthController {
   signIn(@Body() data: SignInDto) {
     return this.authService.signIn(data.email, data.password);
   }
+
+  @Public()
+  @Post('/google-sign-in')
+  @Throttle({ default: { limit: 6, ttl: 5 * 60 * 1000 } })
+  googleSignIn(@Body() data: { googleToken: string }) {
+    return this.authService.googleSignIn(data.googleToken);
+  }
 }
