@@ -44,6 +44,9 @@ export class AuthService {
     if (!userEntity) {
       throw new HttpException('User email not exists', HttpStatus.NOT_FOUND);
     }
+    if (!userEntity.password) {
+      throw new BadRequestException('Invalid login method');
+    }
     const isMatch = await bcrypt.compare(password, userEntity.password);
     if (!isMatch) {
       throw new BadRequestException('User email or password incorrect');
@@ -79,6 +82,8 @@ export class AuthService {
     const googleId = payload['sub'] as string;
     const email = payload['email'] as string;
     const aud = payload['aud'] as string;
+    const firstName = payload['given_name'] as string;
+    const lastName = payload['family_name'] as string;
     if (aud !== clientId) {
       throw new BadRequestException('Token is not of this app');
     }
@@ -88,18 +93,12 @@ export class AuthService {
     });
 
     if (!user) {
-      user = await this.userRepository.findOne({
-        where: { email },
+      const userEntity = this.userRepository.create({
+        fullName: `${firstName} ${lastName}`,
+        googleId,
+        email,
       });
-    }
-
-    if (!user) {
-      throw new BadRequestException('Email is not registered yet');
-    }
-
-    if (!user.googleId) {
-      user.googleId = googleId;
-      await this.userRepository.save(user);
+      user = await this.userRepository.save(userEntity);
     }
 
     const jwtPayload: JwtPayload = {
