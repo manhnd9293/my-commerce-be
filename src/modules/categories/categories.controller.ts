@@ -19,6 +19,8 @@ import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { ListId } from './dto/list-id.dto';
 import { Public } from '../../decorators/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Roles } from '../../decorators/roles.decorator';
+import { UserRole } from '../../utils/enums/user-role';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -27,6 +29,7 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
+  @Roles([UserRole.Admin])
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoriesService.create(createCategoryDto);
   }
@@ -45,6 +48,7 @@ export class CategoriesController {
   @Put(':id')
   @UseInterceptors(FileInterceptor('updateImage', {}))
   @ApiConsumes('multipart/form-data')
+  @Roles([UserRole.Admin])
   update(
     @Param('id') id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -63,6 +67,7 @@ export class CategoriesController {
   }
 
   @Delete()
+  @Roles([UserRole.Admin])
   remove(@Body() data: ListId) {
     return this.categoriesService.remove(data);
   }

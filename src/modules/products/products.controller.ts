@@ -32,6 +32,7 @@ export class ProductsController {
 
   @Post()
   @UseInterceptors(FilesInterceptor('productImages'))
+  @Roles([UserRole.Admin])
   create(@Body() createProductDto: CreateProductDto, @User() user: UserAuth) {
     return this.productsService.create(createProductDto, user);
   }
@@ -42,7 +43,6 @@ export class ProductsController {
     return this.productsService.findPage(query);
   }
   @Get('/all')
-  @Roles([UserRole.Admin])
   findAll() {
     return this.productsService.findAll();
   }
@@ -60,6 +60,7 @@ export class ProductsController {
   }
 
   @Put()
+  @Roles([UserRole.Admin])
   update(@Body() updateProductDto: UpdateProductDto, @User() user: UserAuth) {
     return this.productsService.update(updateProductDto, user);
   }
@@ -67,6 +68,7 @@ export class ProductsController {
   @Patch(':id/images')
   @UseInterceptors(FilesInterceptor('productImages'))
   @ApiConsumes('multipart/form-data')
+  @Roles([UserRole.Admin])
   updateImage(
     @Param('id') id: string,
     @UploadedFiles() productImageFiles: Array<Express.Multer.File>,
@@ -76,6 +78,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @Roles([UserRole.Admin])
   remove(@Param('id') id: string) {
     return this.productsService.remove(+id);
   }
