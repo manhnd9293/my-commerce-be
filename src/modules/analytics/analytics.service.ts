@@ -88,27 +88,33 @@ export class AnalyticsService {
     const topSellProduct = await this.getTopSellProduct(startTime, endTime, 10);
     const result: DashboardDataDto = {
       totalRevenue: currentSale,
-      revenueChange:
-        Math.round(((currentSale - saleLastPeriod) / saleLastPeriod) * 100) /
-        100,
+      revenueChange: saleLastPeriod
+        ? Math.round(((currentSale - saleLastPeriod) / saleLastPeriod) * 100) /
+          100
+        : 1,
       totalOrder: totalCurrentOrder,
-      orderChange:
-        Math.round(
-          ((totalCurrentOrder - totalOrderLastPeriod) / totalOrderLastPeriod) *
-            100,
-        ) / 100,
+      orderChange: totalOrderLastPeriod
+        ? Math.round(
+            ((totalCurrentOrder - totalOrderLastPeriod) /
+              totalOrderLastPeriod) *
+              100,
+          ) / 100
+        : 1,
       newCustomer: totalNewCustomer,
-      customerChange:
-        Math.round(
-          ((totalNewCustomer - totalNewCustomerLastPeriod) /
-            totalNewCustomerLastPeriod) *
-            100,
-        ) / 100,
+      customerChange: totalNewCustomerLastPeriod
+        ? Math.round(
+            ((totalNewCustomer - totalNewCustomerLastPeriod) /
+              totalNewCustomerLastPeriod) *
+              100,
+          ) / 100
+        : 1,
       productSold,
-      productSoldChange:
-        Math.round(
-          ((productSold - productSoldLastPeriod) / productSoldLastPeriod) * 100,
-        ) / 100,
+      productSoldChange: productSoldLastPeriod
+        ? Math.round(
+            ((productSold - productSoldLastPeriod) / productSoldLastPeriod) *
+              100,
+          ) / 100
+        : 1,
       revenueChart,
       orderChart,
       topSellProduct,
@@ -146,18 +152,7 @@ export class AnalyticsService {
     const result =
       await orderQb.getRawMany<{ total: number; time: number }[]>();
 
-    const chartData: DataPoint[] = [];
-
-    //todo: implement later
-    if (detailPeriod !== 'HOUR') {
-      return [];
-    }
-
-    if (detailPeriod === 'HOUR') {
-      for (let i = 0; i < 24; i++) {
-        chartData[i] = { xValue: '' + i, yValue: 0 };
-      }
-    }
+    const chartData: DataPoint[] = this.getInitialChartData(detailPeriod);
 
     for (const item of result) {
       // @ts-ignore
@@ -207,22 +202,39 @@ export class AnalyticsService {
     const result =
       await orderQb.getRawMany<{ total: number; time: number }[]>();
 
+    const chartData = this.getInitialChartData(detailPeriod);
+
+    for (const item of result) {
+      // @ts-ignore
+      chartData[parseInt(item['time'])]['yValue'] = item['total'];
+    }
+
+    return chartData;
+  }
+
+  getInitialChartData(detailPeriod: DetailPeriod) {
     const chartData: DataPoint[] = [];
 
-    //todo: implement later
-    if (detailPeriod !== 'HOUR') {
+    if (!['HOUR', 'DAY', 'MONTH'].includes(detailPeriod)) {
       return [];
     }
 
+    if (detailPeriod === 'DAY') {
+      const now = DateTime.now();
+      for (let i = 0; i < now.endOf('month').day; i++) {
+        chartData[i] = { xValue: '' + (i + 1), yValue: 0 };
+      }
+    }
     if (detailPeriod === 'HOUR') {
       for (let i = 0; i < 24; i++) {
         chartData[i] = { xValue: '' + i, yValue: 0 };
       }
     }
 
-    for (const item of result) {
-      // @ts-ignore
-      chartData[parseInt(item['time'])]['yValue'] = item['total'];
+    if (detailPeriod === 'MONTH') {
+      for (let i = 0; i < 12; i++) {
+        chartData[i] = { xValue: '' + (i + 1), yValue: 0 };
+      }
     }
 
     return chartData;
