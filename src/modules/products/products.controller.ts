@@ -24,6 +24,8 @@ import { Public } from '../../decorators/public.decorator';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
 import { MetricsService } from '../metrics/metrics.service';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { Counter } from 'prom-client';
 
 @Controller('products')
 @ApiTags('Products')
@@ -31,14 +33,15 @@ import { MetricsService } from '../metrics/metrics.service';
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
-    private readonly metricsService: MetricsService,
+    @InjectMetric('total_http_request')
+    private readonly requestCounter: Counter<string>,
   ) {}
 
   @Post()
   @UseInterceptors(FilesInterceptor('productImages'))
   @Roles([UserRole.Admin])
   create(@Body() createProductDto: CreateProductDto, @User() user: UserAuth) {
-    this.metricsService.incrementRequestCounter();
+    this.requestCounter.inc();
     return this.productsService.create(createProductDto, user);
   }
 
