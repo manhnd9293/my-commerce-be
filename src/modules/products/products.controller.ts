@@ -23,17 +23,22 @@ import { BaseQueryDto } from '../../utils/common/base-query.dto';
 import { Public } from '../../decorators/public.decorator';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Controller('products')
 @ApiTags('Products')
 @ApiBearerAuth()
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly metricsService: MetricsService,
+  ) {}
 
   @Post()
   @UseInterceptors(FilesInterceptor('productImages'))
   @Roles([UserRole.Admin])
   create(@Body() createProductDto: CreateProductDto, @User() user: UserAuth) {
+    this.metricsService.incrementRequestCounter();
     return this.productsService.create(createProductDto, user);
   }
 
