@@ -20,6 +20,7 @@ import { HealthModule } from './modules/health/health.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 import * as process from 'node:process';
 
 @Module({
@@ -61,6 +62,7 @@ import * as process from 'node:process';
     OrdersModule,
     HealthModule,
     AnalyticsModule,
+    MetricsModule,
   ],
   providers: [
     {
