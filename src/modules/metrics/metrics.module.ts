@@ -1,5 +1,4 @@
 import { Global, Module } from '@nestjs/common';
-import { MetricsService } from './metrics.service';
 import {
   makeCounterProvider,
   PrometheusModule,
@@ -9,6 +8,7 @@ import { MetricsController } from './metrics.controller';
 const counterProvider = makeCounterProvider({
   name: 'total_http_request',
   help: 'total number of http request',
+  labelNames: ['method', 'path'],
 });
 
 @Global()
