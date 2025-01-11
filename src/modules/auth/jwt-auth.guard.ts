@@ -30,7 +30,7 @@ export class JwtAuthGuard extends AuthGuard(JWT_STRATEGY) {
       const request = context.switchToHttp().getRequest();
       this.requestCounter.inc({
         method: request.method,
-        path: request.originalUrl,
+        path: request.route.path,
       });
     }
     return canActivate;

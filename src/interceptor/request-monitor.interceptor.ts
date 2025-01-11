@@ -23,7 +23,7 @@ export class RequestMonitorInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     this.requestCounter.inc({
       method: request.method,
-      path: request.originalUrl,
+      path: request.route.path,
     });
     return next.handle();
   }
