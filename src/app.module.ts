@@ -22,6 +22,10 @@ import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
 import * as process from 'node:process';
+import {
+  makeCounterProvider,
+  PrometheusModule,
+} from '@willsoto/nestjs-prometheus';
 
 @Module({
   imports: [
@@ -55,6 +59,7 @@ import * as process from 'node:process';
       errorLogStyle: 'json',
       gracefulShutdownTimeoutMs: 1000,
     }),
+    MetricsModule,
     CategoriesModule,
     CommonModule,
     ProductsModule,
@@ -62,7 +67,6 @@ import * as process from 'node:process';
     OrdersModule,
     HealthModule,
     AnalyticsModule,
-    MetricsModule,
   ],
   providers: [
     {
