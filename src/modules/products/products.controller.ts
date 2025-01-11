@@ -31,17 +31,12 @@ import { Counter } from 'prom-client';
 @ApiTags('Products')
 @ApiBearerAuth()
 export class ProductsController {
-  constructor(
-    private readonly productsService: ProductsService,
-    @InjectMetric('total_http_request')
-    private readonly requestCounter: Counter<string>,
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   @Post()
   @UseInterceptors(FilesInterceptor('productImages'))
   @Roles([UserRole.Admin])
   create(@Body() createProductDto: CreateProductDto, @User() user: UserAuth) {
-    this.requestCounter.inc();
     return this.productsService.create(createProductDto, user);
   }
 

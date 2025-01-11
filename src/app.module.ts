@@ -5,7 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseConfig } from './config/database.config';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/jwt-auth.guard';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { CommonModule } from './modules/common/common.module';
@@ -26,6 +26,7 @@ import {
   makeCounterProvider,
   PrometheusModule,
 } from '@willsoto/nestjs-prometheus';
+import { RequestMonitorInterceptor } from './interceptor/request-monitor.interceptor';
 
 @Module({
   imports: [
@@ -80,6 +81,10 @@ import {
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestMonitorInterceptor,
     },
     ...(process.env.NODE_ENV !== 'local'
       ? [
