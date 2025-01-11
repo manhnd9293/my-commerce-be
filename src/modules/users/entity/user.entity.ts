@@ -15,13 +15,10 @@ import { UserRole } from '../../../utils/enums/user-role';
 import { Asset } from '../../common/entities/asset.entity';
 import { UserAddressEntity } from './user-address.entity';
 import {
-  IsDate,
   IsDateString,
   IsOptional,
   IsString,
-  MaxDate,
   MaxLength,
-  MinDate,
   MinLength,
 } from 'class-validator';
 
