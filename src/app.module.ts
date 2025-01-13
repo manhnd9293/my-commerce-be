@@ -20,9 +20,10 @@ import { HealthModule } from './modules/health/health.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { MetricsModule } from './modules/metrics/metrics.module';
+import { MonitorModule } from './modules/metrics/monitor.module';
 import * as process from 'node:process';
 import { RequestMonitorInterceptor } from './interceptor/request-monitor.interceptor';
+import { HttpExceptionFilter } from './exception-filter/http-exception.filter';
 
 @Module({
   imports: [
@@ -56,7 +57,7 @@ import { RequestMonitorInterceptor } from './interceptor/request-monitor.interce
       errorLogStyle: 'json',
       gracefulShutdownTimeoutMs: 1000,
     }),
-    MetricsModule,
+    MonitorModule,
     CategoriesModule,
     CommonModule,
     ProductsModule,
@@ -81,6 +82,10 @@ import { RequestMonitorInterceptor } from './interceptor/request-monitor.interce
     {
       provide: APP_INTERCEPTOR,
       useClass: RequestMonitorInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     },
     ...(process.env.NODE_ENV !== 'local'
       ? [

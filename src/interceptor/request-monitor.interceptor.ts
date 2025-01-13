@@ -4,7 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
+import { catchError, Observable, tap } from 'rxjs';
 import { Counter, Gauge, Histogram } from 'prom-client';
 import { MonitorMetrics } from '../utils/enums/monitorMetrics';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
@@ -30,13 +30,11 @@ export class RequestMonitorInterceptor implements NestInterceptor {
       path: request.route.path,
     };
     this.requestCounter.inc(labels);
-    this.requestInProgress.inc();
+    this.requestInProgress.inc(labels);
     return next.handle().pipe(
-      tap(() =>
-        this.requestLatency.observe(labels, (Date.now() - startTime) / 1000),
-      ),
       tap(() => {
-        this.requestInProgress.dec();
+        this.requestLatency.observe(labels, (Date.now() - startTime) / 1000);
+        this.requestInProgress.dec(labels);
       }),
     );
   }

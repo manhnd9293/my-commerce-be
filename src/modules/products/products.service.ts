@@ -406,6 +406,10 @@ export class ProductsService {
       where: { id: productId },
     });
 
+    if (!currentProduct) {
+      throw new BadRequestException('Current product not found');
+    }
+
     const qb = this.productRepository.createQueryBuilder('product');
     qb.andWhere('product.categoryId = :currentCategoryId', {
       currentCategoryId: currentProduct.categoryId,

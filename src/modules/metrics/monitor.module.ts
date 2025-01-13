@@ -5,13 +5,19 @@ import {
   makeHistogramProvider,
   PrometheusModule,
 } from '@willsoto/nestjs-prometheus';
-import { MetricsController } from './metrics.controller';
+import { MonitorController } from './monitor.controller';
 import { MonitorMetrics } from '../../utils/enums/monitorMetrics';
 
-const counterProvider = makeCounterProvider({
+const requestCounterProvider = makeCounterProvider({
   name: MonitorMetrics.TotalHttpRequest,
   help: 'total number of http requests',
   labelNames: ['method', 'path'],
+});
+
+const requestErrorCounterProvider = makeCounterProvider({
+  name: MonitorMetrics.RequestErrorTotal,
+  help: 'total number of http requests',
+  labelNames: ['method', 'path', 'status'],
 });
 
 const requestLatencyProvider = makeHistogramProvider({
@@ -30,15 +36,24 @@ const requestInProgressProvider = makeGaugeProvider({
 @Module({
   imports: [
     PrometheusModule.register({
-      controller: MetricsController,
+      defaultMetrics: {
+        enabled: true,
+      },
+      controller: MonitorController,
     }),
   ],
-  controllers: [MetricsController],
+  controllers: [MonitorController],
   providers: [
-    counterProvider,
+    requestCounterProvider,
     requestLatencyProvider,
     requestInProgressProvider,
+    requestErrorCounterProvider,
   ],
-  exports: [counterProvider, requestLatencyProvider, requestInProgressProvider],
+  exports: [
+    requestCounterProvider,
+    requestLatencyProvider,
+    requestInProgressProvider,
+    requestErrorCounterProvider,
+  ],
 })
-export class MetricsModule {}
+export class MonitorModule {}
