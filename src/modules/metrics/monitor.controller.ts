@@ -4,4 +4,4 @@ import { Public } from '../../decorators/public.decorator';
 
 @Controller('metrics')
 @Public()
-export class MetricsController extends PrometheusController {}
+export class MonitorController extends PrometheusController {}

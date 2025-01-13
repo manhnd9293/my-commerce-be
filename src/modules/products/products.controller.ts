@@ -23,9 +23,6 @@ import { BaseQueryDto } from '../../utils/common/base-query.dto';
 import { Public } from '../../decorators/public.decorator';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
-import { MetricsService } from '../metrics/metrics.service';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { Counter } from 'prom-client';
 
 @Controller('products')
 @ApiTags('Products')
