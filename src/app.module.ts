@@ -22,10 +22,6 @@ import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
 import * as process from 'node:process';
-import {
-  makeCounterProvider,
-  PrometheusModule,
-} from '@willsoto/nestjs-prometheus';
 import { RequestMonitorInterceptor } from './interceptor/request-monitor.interceptor';
 
 @Module({
