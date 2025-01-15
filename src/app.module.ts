@@ -24,6 +24,7 @@ import { MonitorModule } from './modules/metrics/monitor.module';
 import * as process from 'node:process';
 import { RequestMonitorInterceptor } from './interceptor/request-monitor.interceptor';
 import { HttpExceptionFilter } from './exception-filter/http-exception.filter';
+import { EventsModule } from './modules/events/events.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { HttpExceptionFilter } from './exception-filter/http-exception.filter';
     OrdersModule,
     HealthModule,
     AnalyticsModule,
+    EventsModule,
   ],
   providers: [
     {
