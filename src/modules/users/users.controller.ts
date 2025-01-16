@@ -11,6 +11,7 @@ import {
   Post,
   Put,
   Query,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -29,10 +30,18 @@ import { UserAddressEntity } from './entity/user-address.entity';
 import { PageData } from '../../utils/common/page-data';
 import { OrderItemEntity } from '../orders/entities/order-item.entity';
 import { UpdateUserGeneralInfoDto } from './dto/update-user-general-info.dto';
+import { Response } from 'express';
+import { v1 as uuid } from 'uuid';
+import { ConfigService } from '@nestjs/config';
+import * as process from 'node:process';
+
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Public()
   @Post('/')
@@ -44,6 +53,20 @@ export class UsersController {
   @ApiBearerAuth()
   me(@User() user: UserAuth): Promise<UserEntity> {
     return this.usersService.findByEmail(user.email);
+  }
+
+  @Get('/cookie')
+  @Public()
+  setUserCookie(@Res({ passthrough: true }) response: Response) {
+    response.cookie('s_id', uuid(), {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV !== 'local',
+      sameSite: 'lax',
+    });
+    return {
+      message: 'ok',
+    };
   }
 
   @Patch('avatar')
