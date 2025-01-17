@@ -25,6 +25,7 @@ import * as process from 'node:process';
 import { RequestMonitorInterceptor } from './interceptor/request-monitor.interceptor';
 import { HttpExceptionFilter } from './exception-filter/http-exception.filter';
 import { EventsModule } from './modules/events/events.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -57,6 +58,16 @@ import { EventsModule } from './modules/events/events.module';
     TerminusModule.forRoot({
       errorLogStyle: 'json',
       gracefulShutdownTimeoutMs: 1000,
+    }),
+    JwtModule.registerAsync({
+      global: true,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('jwt.secret'),
+        signOptions: {
+          expiresIn: '1d',
+        },
+      }),
     }),
     MonitorModule,
     CategoriesModule,
