@@ -6,8 +6,10 @@ import {
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
 import { Public } from '../../decorators/public.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('health')
+@ApiTags('Health-check')
 export class HealthController {
   constructor(
     private readonly healthService: HealthCheckService,
