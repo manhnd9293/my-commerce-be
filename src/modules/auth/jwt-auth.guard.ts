@@ -26,6 +26,7 @@ export class JwtAuthGuard extends AuthGuard(JWT_STRATEGY) {
       return true;
     }
     const canActivate = super.canActivate(context);
+
     if (!canActivate) {
       const request = context.switchToHttp().getRequest();
       this.requestCounter.inc({
@@ -33,6 +34,7 @@ export class JwtAuthGuard extends AuthGuard(JWT_STRATEGY) {
         path: request.route.path,
       });
     }
+
     return canActivate;
   }
 }

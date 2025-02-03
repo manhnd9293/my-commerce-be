@@ -14,15 +14,6 @@ import { UserEntity } from '../users/entity/user.entity';
     UsersModule,
     PassportModule,
     TypeOrmModule.forFeature([UserEntity]),
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('jwt.secret'),
-        signOptions: {
-          expiresIn: '1d',
-        },
-      }),
-    }),
   ],
   providers: [AuthService, JwtService, JwtStrategy, ConfigService],
   controllers: [AuthController],

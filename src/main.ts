@@ -7,6 +7,7 @@ import { initializeTransactionalContext } from 'typeorm-transactional';
 import helmet from 'helmet';
 import './config/sentry/instrument';
 import * as process from 'node:process';
+import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const logger = new Logger('Main');
   initializeTransactionalContext();
@@ -36,7 +37,7 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   });
-
+  app.use(cookieParser());
   app.use(helmet());
 
   await app.listen(configService.get('port'), () => {

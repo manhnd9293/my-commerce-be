@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -20,4 +20,5 @@ import { UserAddressEntity } from './entity/user-address.entity';
   providers: [UsersService],
   exports: [UsersService],
 })
+@Global()
 export class UsersModule {}

@@ -24,6 +24,9 @@ import { MonitorModule } from './modules/metrics/monitor.module';
 import * as process from 'node:process';
 import { RequestMonitorInterceptor } from './interceptor/request-monitor.interceptor';
 import { HttpExceptionFilter } from './exception-filter/http-exception.filter';
+import { ConversationsModule } from './modules/conversations/conversations.module';
+import { JwtModule } from '@nestjs/jwt';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -57,6 +60,19 @@ import { HttpExceptionFilter } from './exception-filter/http-exception.filter';
       errorLogStyle: 'json',
       gracefulShutdownTimeoutMs: 1000,
     }),
+    JwtModule.registerAsync({
+      global: true,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('jwt.secret'),
+        signOptions: {
+          expiresIn: '1d',
+        },
+      }),
+    }),
+    EventEmitterModule.forRoot({
+      verboseMemoryLeak: true,
+    }),
     MonitorModule,
     CategoriesModule,
     CommonModule,
@@ -65,6 +81,7 @@ import { HttpExceptionFilter } from './exception-filter/http-exception.filter';
     OrdersModule,
     HealthModule,
     AnalyticsModule,
+    ConversationsModule,
   ],
   providers: [
     {
