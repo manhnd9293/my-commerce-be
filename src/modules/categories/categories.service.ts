@@ -6,6 +6,7 @@ import { Category } from './entities/category.entity';
 import { In, Repository } from 'typeorm';
 import { FileStorageService } from '../common/file-storage.service';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
+import { UserAuth } from '../auth/jwt.strategy';
 
 @Injectable()
 export class CategoriesService {
@@ -15,7 +16,11 @@ export class CategoriesService {
     private readonly fileStorageService: FileStorageService,
   ) {}
 
-  async create(createCategoryDto: CreateCategoryDto) {
+  async create(
+    createCategoryDto: CreateCategoryDto,
+    image: Express.Multer.File,
+    user: UserAuth,
+  ) {
     const check = await this.categoryRepository.findOne({
       where: {
         name: createCategoryDto.name,
@@ -26,8 +31,31 @@ export class CategoriesService {
       throw new BadRequestException('Category exits');
     }
 
-    const category = this.categoryRepository.create(createCategoryDto);
-    return this.categoryRepository.save(category);
+    const category = this.categoryRepository.create({
+      ...createCategoryDto,
+      createdById: user.userId,
+    });
+    const saved = await this.categoryRepository.save(category);
+
+    const asset = await this.fileStorageService.saveFile(
+      image,
+      StorageTopLevelFolder.Categories,
+      `${saved}/${image.originalname}`,
+    );
+    await this.categoryRepository.update(
+      {
+        id: saved.id,
+      },
+      {
+        imageFileId: asset.id,
+      },
+    );
+
+    return this.categoryRepository.findOne({
+      where: {
+        id: saved.id,
+      },
+    });
   }
 
   async findAll() {

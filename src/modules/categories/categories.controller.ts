@@ -21,6 +21,8 @@ import { Public } from '../../decorators/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
+import { User } from '../../decorators/user.decorator';
+import { UserAuth } from '../auth/jwt.strategy';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -30,8 +32,23 @@ export class CategoriesController {
 
   @Post()
   @Roles([UserRole.Admin])
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoriesService.create(createCategoryDto);
+  @UseInterceptors(FileInterceptor('image', {}))
+  @ApiConsumes('multipart/form-data')
+  create(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 30 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: 'image/*' }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    image: Express.Multer.File,
+    @User() user: UserAuth,
+  ) {
+    return this.categoriesService.create(createCategoryDto, image, user);
   }
 
   @Public()
