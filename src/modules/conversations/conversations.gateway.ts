@@ -44,7 +44,6 @@ export class ConversationsGateway
 
   async handleConnection(client: Socket, ...args: any[]) {
     const accessToken = client.handshake.auth['Authorization'];
-    this.logger.log(`Connected a client ${client.id} - atk: ${accessToken}`);
     try {
       const payload: JwtPayload = await this.jwtService.verifyAsync(
         accessToken,
@@ -62,7 +61,7 @@ export class ConversationsGateway
         payload.sub,
       );
       if (userEntity.role === UserRole.Admin) {
-        this.logger.log(`agent with socket ${client.id} connected`);
+        this.logger.debug(`agent with socket ${client.id} connected`);
         const conversations = await this.conversationService.getConversations({
           status: ConversationStatus.OnGoing,
         });
@@ -76,13 +75,13 @@ export class ConversationsGateway
   }
 
   async handleDisconnect(client: Socket) {
-    this.logger.log(`Disconnect client ${client.id}`);
+    this.logger.debug(`Disconnect client ${client.id}`);
     await this.conversationService.deleteUserSocket(client.id);
   }
 
   @SubscribeMessage(ConversationEvent.EnterConversation)
   handleNewConversation(socket: Socket, conversationId: string) {
-    this.logger.log(
+    this.logger.debug(
       `socket: ${socket.id} join conversation: ${conversationId}`,
     );
     socket.join(conversationId);
