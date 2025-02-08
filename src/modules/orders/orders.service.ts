@@ -17,6 +17,9 @@ import { FileStorageService } from '../common/file-storage.service';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { PageData } from '../../utils/common/page-data';
 import { UserRole } from '../../utils/enums/user-role';
+import { Product } from '../products/entities/product.entity';
+import { ProductRatingEntity } from '../product-rating/entities/product-rating.entity';
+import { ProductRatingMediaEntity } from '../product-rating/entities/product-rating-media.entity';
 
 @Injectable()
 export class OrdersService {
@@ -29,6 +32,8 @@ export class OrdersService {
     private readonly cartItemRepository: Repository<CartItemEntity>,
     @InjectRepository(ProductVariant)
     private readonly productVariantRepository: Repository<ProductVariant>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
     private readonly fileStorageService: FileStorageService,
   ) {}
 

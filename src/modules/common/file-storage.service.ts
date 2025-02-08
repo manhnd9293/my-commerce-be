@@ -28,7 +28,9 @@ export class FileStorageService {
 
   async saveFile(
     file: Express.Multer.File,
-    topLevelFolder: StorageTopLevelFolder = StorageTopLevelFolder.Others,
+    topLevelFolder:
+      | StorageTopLevelFolder
+      | string = StorageTopLevelFolder.Others,
     fileName?: string,
   ) {
     const storageFileName = fileName ? fileName : `${uuid()}.${file.mimetype}`;

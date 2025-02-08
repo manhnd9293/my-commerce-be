@@ -1,5 +1,5 @@
 import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { Product } from './product.entity';
 import { ProductSize } from './product-size.entity';
 import { ProductColor } from './product-color.entity';
@@ -7,6 +7,7 @@ import { ProductColor } from './product-color.entity';
 @Entity('product_variant')
 export class ProductVariant extends AbstractBaseEntity {
   @Column({ name: 'product_id', type: 'bigint' })
+  @Index()
   productId: number;
 
   @ManyToOne(() => Product)

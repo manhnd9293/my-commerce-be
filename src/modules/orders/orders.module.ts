@@ -6,6 +6,7 @@ import { OrderEntity } from './entities/order.entity';
 import { OrderItemEntity } from './entities/order-item.entity';
 import { CartItemEntity } from '../carts/entities/cart-item.entity';
 import { ProductVariant } from '../products/entities/product-variant.entity';
+import { Product } from '../products/entities/product.entity';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ProductVariant } from '../products/entities/product-variant.entity';
       OrderItemEntity,
       CartItemEntity,
       ProductVariant,
+      Product,
     ]),
   ],
   controllers: [OrdersController],

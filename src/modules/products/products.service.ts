@@ -118,11 +118,13 @@ export class ProductsService {
     queryBuilder.orderBy('product.createdAt', 'ASC');
 
     const products = await queryBuilder.getMany();
-    for (const product of products) {
-      product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
-        product.productImages[0].assetId,
-      );
-    }
+    await Promise.all(
+      products.map(async (product) => {
+        product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+          product.productImages[0].assetId,
+        );
+      }),
+    );
 
     return products;
   }
