@@ -1,5 +1,12 @@
 import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { UserEntity } from '../../users/entity/user.entity';
 import { OrderItemEntity } from './order-item.entity';
 import { IsString, MaxLength } from 'class-validator';
@@ -7,6 +14,7 @@ import { IsString, MaxLength } from 'class-validator';
 @Entity('orders')
 export class OrderEntity extends AbstractBaseEntity {
   @Column({ name: 'user_id', type: 'int', nullable: true })
+  @Index()
   userId: number;
 
   @ManyToOne(() => UserEntity, (user) => user.orders)

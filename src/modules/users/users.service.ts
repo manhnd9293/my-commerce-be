@@ -161,12 +161,14 @@ export class UsersService {
 
     const orderItemEntities = await qb.getMany();
 
-    for (const item of orderItemEntities) {
-      const product = item.productVariant.product;
-      product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
-        product.productImages[0].assetId,
-      );
-    }
+    await Promise.all(
+      orderItemEntities.map((item) => {
+        const product = item.productVariant.product;
+        return this.fileStorageService
+          .createPresignedUrl(product.productImages[0].assetId)
+          .then((res) => (product.thumbnailUrl = res));
+      }),
+    );
 
     const result: PageData<OrderItemEntity> = {
       data: orderItemEntities,

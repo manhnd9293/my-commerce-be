@@ -3,4 +3,5 @@ export enum StorageTopLevelFolder {
   Users = 'users',
   Others = 'others',
   Categories = 'categories',
+  RatingMedia = 'rating-media',
 }

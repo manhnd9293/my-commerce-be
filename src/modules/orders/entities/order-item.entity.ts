@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
 import { ProductVariant } from '../../products/entities/product-variant.entity';
 import { OrderEntity } from './order.entity';
@@ -27,6 +27,7 @@ export class OrderItemEntity extends AbstractBaseEntity {
   unitPrice: number;
 
   @Column({ name: 'order_id', type: 'int', nullable: false })
+  @Index()
   orderId: number;
 
   @ManyToOne(() => OrderEntity, (order) => order.orderItems)

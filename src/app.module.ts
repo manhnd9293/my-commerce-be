@@ -27,6 +27,7 @@ import { HttpExceptionFilter } from './exception-filter/http-exception.filter';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ProductRatingModule } from './modules/product-rating/product-rating.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     HealthModule,
     AnalyticsModule,
     ConversationsModule,
+    ProductRatingModule,
   ],
   providers: [
     {

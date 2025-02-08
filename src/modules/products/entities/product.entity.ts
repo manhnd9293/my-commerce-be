@@ -6,6 +6,7 @@ import { ProductColor } from './product-color.entity';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ProductVariant } from './product-variant.entity';
 import { ProductImage } from './product-image.entity';
+import { ProductRatingEntity } from '../../product-rating/entities/product-rating.entity';
 
 @Entity('products')
 export class Product extends AbstractBaseEntity {
@@ -57,4 +58,7 @@ export class Product extends AbstractBaseEntity {
   price: number;
 
   thumbnailUrl: string;
+
+  @OneToMany(() => ProductRatingEntity, (pr) => pr.product)
+  ratings: ProductRatingEntity[];
 }
