@@ -13,13 +13,13 @@ import { ProductRatingMediaEntity } from './product-rating-media.entity';
 
 @Entity('product_rating')
 export class ProductRatingEntity extends AbstractBaseEntity {
-  @Column({ name: 'product_id', type: 'int', nullable: false })
+  @Column({ name: 'product_id', type: 'varchar', nullable: false })
   @Index()
-  productId: number;
+  productId: string;
 
-  @Column({ name: 'user_id', type: 'int', nullable: false })
+  @Column({ name: 'user_id', type: 'varchar', nullable: false })
   @Index()
-  userId: number;
+  userId: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({

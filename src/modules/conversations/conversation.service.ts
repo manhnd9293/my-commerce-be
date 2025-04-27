@@ -62,7 +62,7 @@ export class ConversationService {
     return savedConversation;
   }
 
-  async createMessage(userId: number, createMessageDto: CreateMessageDto) {
+  async createMessage(userId: string, createMessageDto: CreateMessageDto) {
     const messagesEntity = this.messagesRepository.create({
       createdById: userId,
       textContent: createMessageDto.textContent,
@@ -73,7 +73,7 @@ export class ConversationService {
     return savedMessage;
   }
 
-  async saveUserSocketData(userId: number, socketId: string) {
+  async saveUserSocketData(userId: string, socketId: string) {
     const userSocketEntity = this.userSocketRepository.create({
       userId,
       socketId,
@@ -130,7 +130,7 @@ export class ConversationService {
     });
   }
 
-  getConversationMessages(id: number) {
+  getConversationMessages(id: string) {
     return this.messagesRepository.find({
       where: {
         conversationId: id,
@@ -166,7 +166,7 @@ export class ConversationService {
   }
 
   async updateConversationStatus(
-    id: number,
+    id: string,
     data: UpdateConversationStatusDto,
     user: UserAuth,
   ) {
@@ -240,7 +240,7 @@ export class ConversationService {
     return conversationsEntity;
   }
 
-  async getUserDetail(userId: number) {
+  async getUserDetail(userId: string) {
     return this.userRepository.findOne({
       where: {
         id: userId,

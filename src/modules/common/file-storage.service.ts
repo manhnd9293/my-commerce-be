@@ -49,7 +49,7 @@ export class FileStorageService {
     return savedAsset;
   }
 
-  async createPresignedUrl(assetId: number) {
+  async createPresignedUrl(assetId: string) {
     const asset = await this.assetRepository.findOne({
       where: {
         id: assetId,
@@ -68,7 +68,7 @@ export class FileStorageService {
     return getSignedUrl(this.s3, command, { expiresIn: 10000 });
   }
 
-  async deleteAsset(assetId: number) {
+  async deleteAsset(assetId: string) {
     const asset = await this.assetRepository.findOne({
       where: {
         id: assetId,

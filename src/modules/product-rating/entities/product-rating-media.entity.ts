@@ -5,8 +5,8 @@ import { ProductRatingEntity } from './product-rating.entity';
 
 @Entity('product_rating_media')
 export class ProductRatingMediaEntity extends AbstractBaseEntity {
-  @Column({ name: 'asset_id', type: 'int', nullable: false })
-  assetId: number;
+  @Column({ name: 'asset_id', type: 'varchar', nullable: false })
+  assetId: string;
 
   @ManyToOne(() => Asset)
   @JoinColumn({
@@ -15,8 +15,8 @@ export class ProductRatingMediaEntity extends AbstractBaseEntity {
   })
   asset: Asset;
 
-  @Column({ name: 'product_rating_id', type: 'int', nullable: false })
-  productRatingId: number;
+  @Column({ name: 'product_rating_id', type: 'varchar', nullable: false })
+  productRatingId: string;
 
   @ManyToOne(() => ProductRatingEntity)
   @JoinColumn({

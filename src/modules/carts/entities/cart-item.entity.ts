@@ -6,7 +6,7 @@ import { ProductVariant } from '../../products/entities/product-variant.entity';
 @Entity('cart_items')
 export class CartItemEntity extends AbstractBaseEntity {
   @Column({ name: 'user_id', type: 'number', nullable: false })
-  userId: number;
+  userId: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({
@@ -16,7 +16,7 @@ export class CartItemEntity extends AbstractBaseEntity {
   user: UserEntity;
 
   @Column({ name: 'product_variant_id', type: 'number', nullable: false })
-  productVariantId: number;
+  productVariantId: string;
 
   @ManyToOne(() => ProductVariant)
   @JoinColumn({

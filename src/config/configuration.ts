@@ -9,8 +9,9 @@ export default () => ({
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
-    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+    // entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     synchronize: process.env.NODE_ENV !== 'production',
+    autoLoadEntities: true,
     ssl: {
       // rejectUnauthorized: true,
       // ca: fs.readFileSync('src/config/db/ca.pem').toString(),

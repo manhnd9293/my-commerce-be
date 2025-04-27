@@ -5,5 +5,5 @@ export class UpdateProductColorDto extends PickType(ProductColor, [
   'name',
   'code',
 ] as const) {
-  id?: number | null;
+  id?: string | null;
 }

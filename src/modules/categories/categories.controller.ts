@@ -58,8 +58,8 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.categoriesService.findOne(+id);
+  findOne(@Param('id') id: string) {
+    return this.categoriesService.findOne(id);
   }
 
   @Put(':id')
@@ -67,7 +67,7 @@ export class CategoriesController {
   @ApiConsumes('multipart/form-data')
   @Roles([UserRole.Admin])
   update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
     @UploadedFile(
       new ParseFilePipe({

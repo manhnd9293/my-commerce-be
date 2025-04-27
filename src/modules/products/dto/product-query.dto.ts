@@ -3,5 +3,5 @@ import { BaseQueryDto } from '../../../utils/common/base-query.dto';
 
 export class ProductQueryDto extends BaseQueryDto {
   @Optional()
-  categoryId: number;
+  categoryId: string;
 }

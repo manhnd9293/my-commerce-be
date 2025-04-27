@@ -8,5 +8,5 @@ export class CreateOrderItemDto extends PickType(OrderItemEntity, [
   'unitPrice',
 ] as const) {
   @IsOptional()
-  cartItemId: number;
+  cartItemId: string;
 }

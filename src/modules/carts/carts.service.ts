@@ -71,7 +71,7 @@ export class CartsService {
     return cartItemFull;
   }
 
-  async removeCartItem(cartItemId: number, user: UserAuth) {
+  async removeCartItem(cartItemId: string, user: UserAuth) {
     const cartItemEntity = await this.cartItemRepository.findOne({
       where: {
         id: cartItemId,

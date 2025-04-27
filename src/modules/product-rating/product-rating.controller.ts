@@ -33,7 +33,7 @@ export class ProductRatingController {
     @Param('productId') productId: string,
     @Query() query: ProductRatingQueryDto,
   ) {
-    return this.productRatingService.getProductRating(+productId, query);
+    return this.productRatingService.getProductRating(productId, query);
   }
 
   @Post(':productId')
@@ -46,7 +46,7 @@ export class ProductRatingController {
     @Body() data: CreateProductRatingDto,
   ) {
     return this.productRatingService.createRating(
-      +productId,
+      productId,
       data,
       productRatingMedia,
       user,

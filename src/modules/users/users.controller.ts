@@ -113,7 +113,7 @@ export class UsersController {
     @Param('addressId') addressId: string,
     @Body() data: UpdateUserAddressDto,
   ): Promise<UserAddressEntity> {
-    return this.usersService.updateUserAddress(Number(addressId), data, user);
+    return this.usersService.updateUserAddress(addressId, data, user);
   }
 
   @Delete('address/:addressId')
@@ -121,7 +121,7 @@ export class UsersController {
     @User() user: UserAuth,
     @Param('addressId') addressId: string,
   ) {
-    return this.usersService.deleteAddress(Number(addressId), user);
+    return this.usersService.deleteAddress(addressId, user);
   }
 
   @Get('address')

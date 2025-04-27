@@ -12,8 +12,8 @@ export class ConversationsEntity extends AbstractBaseEntity {
   @Column({ name: 'subject', type: 'varchar' })
   subject: string;
 
-  @Column({ name: 'taken_by_id', type: 'int', nullable: true })
-  takenById: number;
+  @Column({ name: 'taken_by_id', type: 'varchar', nullable: true })
+  takenById: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({

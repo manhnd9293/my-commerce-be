@@ -7,8 +7,8 @@ export class UserSocketEntity extends AbstractBaseEntity {
   @Column({ name: 'socket_id', type: 'varchar', nullable: false })
   socketId: string;
 
-  @Column({ name: 'user_id', type: 'int', nullable: false })
-  userId: number;
+  @Column({ name: 'user_id', type: 'varchar', nullable: false })
+  userId: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({

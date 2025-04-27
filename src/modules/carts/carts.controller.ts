@@ -25,6 +25,6 @@ export class CartsController {
 
   @Delete('item/:id')
   deleteCartItem(@Param('id') id: string, @User() user: UserAuth) {
-    return this.cartsService.removeCartItem(+id, user);
+    return this.cartsService.removeCartItem(id, user);
   }
 }

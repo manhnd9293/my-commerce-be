@@ -2,7 +2,7 @@ import { IsNotEmpty } from 'class-validator';
 
 export class CartCheckOutUpdateDto {
   @IsNotEmpty()
-  cartItemId: number;
+  cartItemId: string;
 
   @IsNotEmpty()
   isCheckedOut: boolean;

@@ -24,8 +24,8 @@ import {
 
 @Entity('users')
 export class UserEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ name: 'email', type: 'varchar', length: 255, unique: true })
   email: string;
@@ -50,10 +50,10 @@ export class UserEntity {
   @Column({
     name: 'avatar_file_id',
     nullable: true,
-    type: 'bigint',
+    type: 'varchar',
     select: false,
   })
-  avatarFileId: number;
+  avatarFileId: string;
 
   @ManyToOne(() => Asset)
   @JoinColumn({
