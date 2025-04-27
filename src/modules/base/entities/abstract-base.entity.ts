@@ -4,14 +4,14 @@ import {
   DeleteDateColumn,
   JoinColumn,
   ManyToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/entity/user.entity';
 
 export abstract class AbstractBaseEntity {
-  @PrimaryColumn({ generated: 'increment' })
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
@@ -26,11 +26,11 @@ export abstract class AbstractBaseEntity {
   })
   deletedAt: Date;
 
-  @Column({ name: 'created_by_id', type: 'bigint', nullable: true })
-  createdById: number;
+  @Column({ name: 'created_by_id', type: 'varchar', nullable: true })
+  createdById: string;
 
-  @Column({ name: 'updated_by_id', type: 'bigint', nullable: true })
-  updatedById: number;
+  @Column({ name: 'updated_by_id', type: 'varchar', nullable: true })
+  updatedById: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({

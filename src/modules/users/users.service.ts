@@ -138,7 +138,7 @@ export class UsersService {
 
   async getUserPurchaseHistory(
     query: PurchaseHistoryQueryDto,
-    userId: number,
+    userId: string,
   ): Promise<PageData<OrderItemEntity>> {
     const { page, pageSize, order, sortBy, search } = query;
     const qb = this.orderItemRepository.createQueryBuilder('item');
@@ -192,7 +192,7 @@ export class UsersService {
   }
 
   async updateUserAddress(
-    addressId: number,
+    addressId: string,
     data: UpdateUserAddressDto,
     user: UserAuth,
   ): Promise<UserAddressEntity> {
@@ -218,7 +218,7 @@ export class UsersService {
     });
   }
 
-  async deleteAddress(addressId: number, user: UserAuth) {
+  async deleteAddress(addressId: string, user: UserAuth) {
     await this.validateUserAndAddress(addressId, user);
     await this.userAddressRepository.delete({
       id: addressId,
@@ -227,7 +227,7 @@ export class UsersService {
     return 'success';
   }
 
-  private async validateUserAndAddress(addressId: number, user: UserAuth) {
+  private async validateUserAndAddress(addressId: string, user: UserAuth) {
     const userAddressEntity = await this.userAddressRepository.findOne({
       where: {
         id: addressId,

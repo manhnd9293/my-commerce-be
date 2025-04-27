@@ -50,13 +50,13 @@ export class ProductsController {
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.productsService.findOne(+id);
+    return this.productsService.findOne(id);
   }
 
   @Public()
   @Get(':id/similar')
   findSimilarProducts(@Param('id') id: string, @Query() query: BaseQueryDto) {
-    return this.productsService.findSimilarProducts(+id, query);
+    return this.productsService.findSimilarProducts(id, query);
   }
 
   @Put()
@@ -74,7 +74,7 @@ export class ProductsController {
     @UploadedFiles() productImageFiles: Array<Express.Multer.File>,
     @User() user: UserAuth,
   ) {
-    return this.productsService.updateImages(+id, productImageFiles, user);
+    return this.productsService.updateImages(id, productImageFiles, user);
   }
 
   @Delete(':id')

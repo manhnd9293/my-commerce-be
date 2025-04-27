@@ -6,9 +6,9 @@ import { ProductColor } from './product-color.entity';
 
 @Entity('product_variant')
 export class ProductVariant extends AbstractBaseEntity {
-  @Column({ name: 'product_id', type: 'bigint' })
+  @Column({ name: 'product_id', type: 'varchar' })
   @Index()
-  productId: number;
+  productId: string;
 
   @ManyToOne(() => Product)
   @JoinColumn({
@@ -19,10 +19,10 @@ export class ProductVariant extends AbstractBaseEntity {
 
   @Column({
     name: 'product_size_id',
-    type: 'bigint',
+    type: 'varchar',
     nullable: true,
   })
-  productSizeId: number;
+  productSizeId: string;
 
   @ManyToOne(() => ProductSize)
   @JoinColumn({
@@ -33,10 +33,10 @@ export class ProductVariant extends AbstractBaseEntity {
 
   @Column({
     name: 'product_color_id',
-    type: 'bigint',
+    type: 'varchar',
     nullable: true,
   })
-  productColorId: number;
+  productColorId: string;
 
   @ManyToOne(() => ProductColor)
   @JoinColumn({

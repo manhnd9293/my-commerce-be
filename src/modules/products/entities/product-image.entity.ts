@@ -5,8 +5,8 @@ import { Asset } from '../../common/entities/asset.entity';
 
 @Entity('product_images')
 export class ProductImage extends AbstractBaseEntity {
-  @Column({ name: 'product_id', type: 'bigint' })
-  productId: number;
+  @Column({ name: 'product_id', type: 'varchar' })
+  productId: string;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id', referencedColumnName: 'id' })
@@ -16,6 +16,6 @@ export class ProductImage extends AbstractBaseEntity {
   @JoinColumn({ name: 'asset_id', referencedColumnName: 'id' })
   asset: Asset;
 
-  @Column({ name: 'asset_id', type: 'bigint' })
-  assetId: number;
+  @Column({ name: 'asset_id', type: 'varchar' })
+  assetId: string;
 }

@@ -8,7 +8,7 @@ export class MessagesEntity extends AbstractBaseEntity {
   textContent: string;
 
   @Column({ name: 'conversation_id', nullable: false, type: 'varchar' })
-  conversationId: number;
+  conversationId: string;
 
   @ManyToOne(() => ConversationsEntity)
   @JoinColumn({

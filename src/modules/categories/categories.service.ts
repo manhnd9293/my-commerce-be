@@ -76,7 +76,7 @@ export class CategoriesService {
     return categories;
   }
 
-  async findOne(id: number): Promise<Category | null> {
+  async findOne(id: string): Promise<Category | null> {
     const category = await this.categoryRepository.findOne({
       where: {
         id,
@@ -94,7 +94,7 @@ export class CategoriesService {
   }
 
   async update(
-    id: number,
+    id: string,
     updateCategoryDto: UpdateCategoryDto,
     imageFile: Express.Multer.File,
   ) {
@@ -131,7 +131,7 @@ export class CategoriesService {
     return this.categoryRepository.save(category);
   }
 
-  async remove(data: { ids: number[] }) {
+  async remove(data: { ids: string[] }) {
     const categories = await this.categoryRepository.find({
       where: {
         id: In(data.ids),

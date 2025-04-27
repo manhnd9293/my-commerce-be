@@ -40,7 +40,7 @@ export class OrdersController {
 
   @Get('/my-order')
   getMyOrder(@User() user: UserAuth, @Query() query: OrderQueryDto) {
-    if (Number(query.userId) !== user.userId) {
+    if (query.userId !== user.userId) {
       throw new ForbiddenException('Invalid request');
     }
     return this.ordersService.getOrders(query);
@@ -49,6 +49,6 @@ export class OrdersController {
   @Roles([UserRole.Admin, UserRole.Buyer])
   @Get(':id')
   getOrderDetail(@User() user: UserAuth, @Param('id') id: string) {
-    return this.ordersService.getOrderDetail(+id, user);
+    return this.ordersService.getOrderDetail(id, user);
   }
 }

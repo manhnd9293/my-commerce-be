@@ -41,8 +41,8 @@ export class Product extends AbstractBaseEntity {
   productVariants?: ProductVariant[];
 
   @IsNotEmpty()
-  @Column({ name: 'category_id', type: 'bigint' })
-  categoryId: number;
+  @Column({ name: 'category_id', type: 'varchar' })
+  categoryId: string;
 
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'category_id', referencedColumnName: 'id' })

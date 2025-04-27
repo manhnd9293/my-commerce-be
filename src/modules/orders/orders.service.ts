@@ -18,8 +18,6 @@ import { OrderQueryDto } from './dto/order-query.dto';
 import { PageData } from '../../utils/common/page-data';
 import { UserRole } from '../../utils/enums/user-role';
 import { Product } from '../products/entities/product.entity';
-import { ProductRatingEntity } from '../product-rating/entities/product-rating.entity';
-import { ProductRatingMediaEntity } from '../product-rating/entities/product-rating-media.entity';
 
 @Injectable()
 export class OrdersService {
@@ -182,7 +180,7 @@ export class OrdersService {
     return pageData;
   }
 
-  async getOrderDetail(id: number, user: UserAuth) {
+  async getOrderDetail(id: string, user: UserAuth) {
     const orderEntity = await this.orderRepository.findOne({
       where: {
         id,

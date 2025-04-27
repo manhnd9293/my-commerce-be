@@ -77,7 +77,7 @@ export class ProductRatingService {
 
   @Transactional()
   async createRating(
-    productId: number,
+    productId: string,
     data: CreateProductRatingDto,
     productRatingMedia: Array<Express.Multer.File>,
     user: UserAuth,
@@ -143,7 +143,7 @@ export class ProductRatingService {
     return productRatingEntity;
   }
 
-  async getProductRating(productId: number, query: ProductRatingQueryDto) {
+  async getProductRating(productId: string, query: ProductRatingQueryDto) {
     const qb = this.productRatingRepository.createQueryBuilder('pr');
     qb.andWhere('pr.productId = :pId', { pId: productId });
     query.rate && qb.andWhere('pr.rate = :rate', { rate: query.rate });

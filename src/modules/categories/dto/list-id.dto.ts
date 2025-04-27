@@ -1,3 +1,3 @@
 export class ListId {
-  ids: number[];
+  ids: string[];
 }

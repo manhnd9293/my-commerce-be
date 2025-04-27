@@ -1,4 +1,4 @@
 export class CartItemDto {
-  productVariantId: number;
+  productVariantId: string;
   quantity: number;
 }

@@ -11,9 +11,9 @@ export class ProductSize extends AbstractBaseEntity {
   @IsNotEmpty()
   name: string;
 
-  @Column({ name: 'product_id', type: 'bigint' })
+  @Column({ name: 'product_id', type: 'varchar' })
   @IsNumber()
-  productId: number;
+  productId: string;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id', referencedColumnName: 'id' })

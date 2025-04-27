@@ -48,7 +48,7 @@ export class ProductsService {
     }
 
     const product = this.productRepository.create({
-      categoryId: Number(createProductDto.categoryId),
+      categoryId: createProductDto.categoryId,
       name: createProductDto.name,
       description: createProductDto.description,
       createdById: user.userId,
@@ -169,7 +169,7 @@ export class ProductsService {
     return pageData;
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const product = await this.productRepository
       .createQueryBuilder('product')
       .andWhere('product.id = :productId', { productId: id })
@@ -279,7 +279,11 @@ export class ProductsService {
     const newSizes = updateProductDto.productSizes
       .filter((size) => !size.id)
       .map((size) =>
-        this.productSizeRepository.create({ ...size, productId: product.id }),
+        this.productSizeRepository.create({
+          ...size,
+          productId: product.id,
+          id: undefined,
+        }),
       );
     const newProductSizes = await this.productSizeRepository.save(newSizes);
 
@@ -359,7 +363,7 @@ export class ProductsService {
   }
 
   async updateImages(
-    id: number,
+    id: string,
     productImageFiles: Array<Express.Multer.File>,
     user: UserAuth,
   ) {
@@ -402,7 +406,7 @@ export class ProductsService {
     return `This action removes a #${id} product`;
   }
 
-  async findSimilarProducts(productId: number, query: BaseQueryDto) {
+  async findSimilarProducts(productId: string, query: BaseQueryDto) {
     const { page, pageSize } = query;
     const currentProduct = await this.productRepository.findOne({
       where: { id: productId },

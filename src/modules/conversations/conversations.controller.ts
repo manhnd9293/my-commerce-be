@@ -52,7 +52,7 @@ export class ConversationsController {
 
   @Get(':id/messages')
   getConversationMessages(@Param('id') id: string) {
-    return this.conversationService.getConversationMessages(Number(id));
+    return this.conversationService.getConversationMessages(id);
   }
 
   @Patch(':id/status')
@@ -62,6 +62,6 @@ export class ConversationsController {
     @User() user: UserAuth,
     @Body() data: UpdateConversationStatusDto,
   ) {
-    return this.conversationService.updateConversationStatus(+id, data, user);
+    return this.conversationService.updateConversationStatus(id, data, user);
   }
 }

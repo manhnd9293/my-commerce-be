@@ -8,12 +8,12 @@ import { Repository } from 'typeorm';
 import { UserRole } from '../../utils/enums/user-role';
 
 export interface JwtPayload {
-  sub: number;
+  sub: string;
   email: string;
 }
 
 export interface UserAuth {
-  userId: number;
+  userId: string;
   email: string;
   role: UserRole;
 }
