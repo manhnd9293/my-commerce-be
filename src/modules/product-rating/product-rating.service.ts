@@ -52,7 +52,6 @@ export class ProductRatingService {
     qb.andWhere('o.userId = :userId', { userId: user.userId });
     qb.select('distinct p.id');
 
-    console.log(qb.getQueryAndParameters());
     const rawIds = await qb.getRawMany<{ id: number }>();
     const productIds = rawIds.map((d) => d.id);
     const products = await this.productRepository.find({

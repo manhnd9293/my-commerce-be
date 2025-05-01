@@ -28,6 +28,7 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
 import { JwtModule } from '@nestjs/jwt';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ProductRatingModule } from './modules/product-rating/product-rating.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { ProductRatingModule } from './modules/product-rating/product-rating.mod
     AnalyticsModule,
     ConversationsModule,
     ProductRatingModule,
+    MediaModule,
   ],
   providers: [
     {

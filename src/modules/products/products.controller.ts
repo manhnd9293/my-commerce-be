@@ -43,6 +43,7 @@ export class ProductsController {
     return this.productsService.findPage(query);
   }
   @Get('/all')
+  @Roles([UserRole.Admin])
   findAll() {
     return this.productsService.findAll();
   }
@@ -59,10 +60,14 @@ export class ProductsController {
     return this.productsService.findSimilarProducts(id, query);
   }
 
-  @Put()
+  @Put(':id')
   @Roles([UserRole.Admin])
-  update(@Body() updateProductDto: UpdateProductDto, @User() user: UserAuth) {
-    return this.productsService.update(updateProductDto, user);
+  update(
+    @Body() updateProductDto: UpdateProductDto,
+    @User() user: UserAuth,
+    @Param('id') productId: string,
+  ) {
+    return this.productsService.update(productId, updateProductDto, user);
   }
 
   @Patch(':id/images')
@@ -77,9 +82,28 @@ export class ProductsController {
     return this.productsService.updateImages(id, productImageFiles, user);
   }
 
+  @Patch(':id/media')
+  @Roles([UserRole.Admin])
+  updateProductMedia(
+    @Body() data: { updateIds: string[] },
+    @Param('id') productId: string,
+    @User() user: UserAuth,
+  ) {
+    return this.productsService.updateProductMedia(productId, data, user);
+  }
+
+  @Delete(':id/media')
+  @Roles([UserRole.Admin])
+  deleteProductMedia(
+    @Body() data: { assetIds: string[] },
+    @Param('id') id: string,
+  ) {
+    return this.productsService.deleteMedia(id, data);
+  }
+
   @Delete(':id')
   @Roles([UserRole.Admin])
   remove(@Param('id') id: string) {
-    return this.productsService.remove(+id);
+    return this.productsService.remove(id);
   }
 }

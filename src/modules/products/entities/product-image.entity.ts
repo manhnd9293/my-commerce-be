@@ -1,5 +1,5 @@
 import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Product } from './product.entity';
 import { Asset } from '../../common/entities/asset.entity';
 
@@ -12,10 +12,13 @@ export class ProductImage extends AbstractBaseEntity {
   @JoinColumn({ name: 'product_id', referencedColumnName: 'id' })
   product: Product;
 
-  @OneToOne(() => Asset)
+  @ManyToOne(() => Asset)
   @JoinColumn({ name: 'asset_id', referencedColumnName: 'id' })
   asset: Asset;
 
   @Column({ name: 'asset_id', type: 'varchar' })
   assetId: string;
+
+  @Column({ name: 'pos', type: 'int', nullable: false })
+  pos: number;
 }
