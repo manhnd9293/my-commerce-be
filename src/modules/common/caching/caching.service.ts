@@ -13,12 +13,12 @@ export class CachingService {
       username: configService.get('redis.username'),
       password: configService.get('redis.password'),
     });
-    this.cacheDb.on('connect', () => {
+    this.cacheDb.on('ready', () => {
       this.logger.log('Connect to redis db success');
     });
 
-    this.cacheDb.on('error', () => {
-      this.logger.error('Fail to connect to cached server');
+    this.cacheDb.on('error', (error) => {
+      this.logger.error('Fail to connect to cached server', error.message);
     });
   }
 }
