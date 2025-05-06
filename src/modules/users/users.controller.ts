@@ -19,7 +19,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Public } from '../../decorators/public.decorator';
 import { User } from '../../decorators/user.decorator';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { UserEntity } from './entity/user.entity';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';

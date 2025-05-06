@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Asset } from '../common/entities/asset.entity';
 import { Repository } from 'typeorm';
-import { UserAuth } from '../auth/jwt.strategy';
-import { FileStorageService } from '../common/file-storage.service';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 import { v4 as uuidv4 } from 'uuid';
 

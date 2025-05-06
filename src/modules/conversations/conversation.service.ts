@@ -8,7 +8,7 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 import { Brackets, Repository } from 'typeorm';
 import { ConversationsEntity } from './entities/conversations.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { ConversationStatus } from './enum/conversation-status';
 import { MessagesEntity } from './entities/messages.entity';
 import { Transactional } from 'typeorm-transactional';
@@ -17,7 +17,7 @@ import { UserSocketEntity } from './entities/user-socket.entity';
 
 import { UpdateConversationStatusDto } from './dto/update-conversation-status.dto';
 import { QueryConversationDto } from './dto/query-conversation.dto';
-import { FileStorageService } from '../common/file-storage.service';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConversationEvent } from './enum/conversation-event';
 import { ConversationAction } from './enum/conversation-action';

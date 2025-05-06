@@ -22,7 +22,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
 import { User } from '../../decorators/user.decorator';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 
 @ApiTags('Categories')
 @Controller('categories')

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Asset } from './entities/asset.entity';
+import { Asset } from '../entities/asset.entity';
 import { Repository } from 'typeorm';
 import { GetObjectCommand, S3 } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
-import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
+import { StorageTopLevelFolder } from '../../../utils/enums/storage-to-level-folder';
 import { v1 as uuid } from 'uuid';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 

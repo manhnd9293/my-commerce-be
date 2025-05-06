@@ -1,10 +1,10 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { JWT_STRATEGY } from './jwt.strategy';
-import { IS_PUBLIC_KEY } from '../../decorators/public.decorator';
+import { JWT_STRATEGY } from '../strategies/jwt.strategy';
+import { IS_PUBLIC_KEY } from '../../../decorators/public.decorator';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { MonitorMetrics } from '../../utils/enums/monitorMetrics';
+import { MonitorMetrics } from '../../../utils/enums/monitorMetrics';
 import { Counter } from 'prom-client';
 
 @Injectable()

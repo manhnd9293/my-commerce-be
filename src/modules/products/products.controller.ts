@@ -16,7 +16,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { User } from '../../decorators/user.decorator';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { BaseQueryDto } from '../../utils/common/base-query.dto';

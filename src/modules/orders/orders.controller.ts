@@ -11,7 +11,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from '../../decorators/user.decorator';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
