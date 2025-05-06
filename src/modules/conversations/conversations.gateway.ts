@@ -14,7 +14,7 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ConversationService } from './conversation.service';
-import { JwtPayload } from '../auth/jwt.strategy';
+import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import { ConversationEvent } from './enum/conversation-event';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UserRole } from '../../utils/enums/user-role';

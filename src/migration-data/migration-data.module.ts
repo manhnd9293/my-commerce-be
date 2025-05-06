@@ -6,8 +6,8 @@ import { ProductSize } from '../modules/products/entities/product-size.entity';
 import { ProductVariant } from '../modules/products/entities/product-variant.entity';
 import { MigrationDataService } from './migration-data.service';
 import { ConfigModule } from '@nestjs/config';
-import configuration from '../config/configuration';
-import { DatabaseConfig } from '../config/database.config';
+import configuration from '../config/environments/configuration';
+import { DatabaseConfig } from '../config/db/database.config';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 

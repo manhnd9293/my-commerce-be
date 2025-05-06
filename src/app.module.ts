@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import configuration from './config/configuration';
+import configuration from './config/environments/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DatabaseConfig } from './config/database.config';
+import { DatabaseConfig } from './config/db/database.config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { JwtAuthGuard } from './modules/auth/jwt-auth.guard';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { CommonModule } from './modules/common/common.module';
 import { ProductsModule } from './modules/products/products.module';
@@ -28,6 +28,7 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
 import { JwtModule } from '@nestjs/jwt';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ProductRatingModule } from './modules/product-rating/product-rating.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { ProductRatingModule } from './modules/product-rating/product-rating.mod
     AnalyticsModule,
     ConversationsModule,
     ProductRatingModule,
+    MediaModule,
   ],
   providers: [
     {

@@ -8,8 +8,8 @@ import { CartItemEntity } from './entities/cart-item.entity';
 import { Repository } from 'typeorm';
 import { CartItemDto } from './dtos/cart-item.dto';
 import { ProductVariant } from '../products/entities/product-variant.entity';
-import { UserAuth } from '../auth/jwt.strategy';
-import { FileStorageService } from '../common/file-storage.service';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import { CartCheckOutUpdateDto } from '../orders/dto/cart-check-out-update.dto';
 
 @Injectable()
@@ -71,7 +71,7 @@ export class CartsService {
     return cartItemFull;
   }
 
-  async removeCartItem(cartItemId: number, user: UserAuth) {
+  async removeCartItem(cartItemId: string, user: UserAuth) {
     const cartItemEntity = await this.cartItemRepository.findOne({
       where: {
         id: cartItemId,

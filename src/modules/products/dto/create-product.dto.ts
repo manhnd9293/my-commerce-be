@@ -19,4 +19,7 @@ export class CreateProductDto extends PickType(Product, [
     type: CreateProductColorDto,
   })
   productColors: CreateProductColorDto[];
+
+  @ApiProperty()
+  productMedia: string[];
 }

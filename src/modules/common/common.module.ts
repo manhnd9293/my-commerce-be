@@ -1,13 +1,13 @@
 import { Global, Module } from '@nestjs/common';
-import { FileStorageService } from './file-storage.service';
+import { FileStorageService } from './file-storage/file-storage.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Asset } from './entities/asset.entity';
-import { GeneratorService } from './generator.service';
+import { CachingService } from './caching/caching.service';
 
 @Global()
 @Module({
   imports: [TypeOrmModule.forFeature([Asset])],
-  providers: [FileStorageService, GeneratorService],
-  exports: [FileStorageService],
+  providers: [FileStorageService, CachingService],
+  exports: [FileStorageService, CachingService],
 })
 export class CommonModule {}

@@ -3,7 +3,7 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { In, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 import { CreateProductRatingDto } from './dto/create-product-rating.dto';
@@ -16,7 +16,7 @@ import { ProductVariant } from '../products/entities/product-variant.entity';
 import { Product } from '../products/entities/product.entity';
 import { ProductRatingEntity } from './entities/product-rating.entity';
 import { ProductRatingMediaEntity } from './entities/product-rating-media.entity';
-import { FileStorageService } from '../common/file-storage.service';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import { ProductRatingQueryDto } from './dto/product-rating-query.dto';
 import { PageData } from '../../utils/common/page-data';
 
@@ -52,7 +52,6 @@ export class ProductRatingService {
     qb.andWhere('o.userId = :userId', { userId: user.userId });
     qb.select('distinct p.id');
 
-    console.log(qb.getQueryAndParameters());
     const rawIds = await qb.getRawMany<{ id: number }>();
     const productIds = rawIds.map((d) => d.id);
     const products = await this.productRepository.find({
@@ -77,7 +76,7 @@ export class ProductRatingService {
 
   @Transactional()
   async createRating(
-    productId: number,
+    productId: string,
     data: CreateProductRatingDto,
     productRatingMedia: Array<Express.Multer.File>,
     user: UserAuth,
@@ -143,7 +142,7 @@ export class ProductRatingService {
     return productRatingEntity;
   }
 
-  async getProductRating(productId: number, query: ProductRatingQueryDto) {
+  async getProductRating(productId: string, query: ProductRatingQueryDto) {
     const qb = this.productRatingRepository.createQueryBuilder('pr');
     qb.andWhere('pr.productId = :pId', { pId: productId });
     query.rate && qb.andWhere('pr.rate = :rate', { rate: query.rate });

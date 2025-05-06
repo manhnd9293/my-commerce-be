@@ -10,8 +10,8 @@ import { UserEntity } from './entity/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
-import { FileStorageService } from '../common/file-storage.service';
-import { UserAuth } from '../auth/jwt.strategy';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 import { OrderEntity } from '../orders/entities/order.entity';
 import { OrderItemEntity } from '../orders/entities/order-item.entity';
@@ -138,7 +138,7 @@ export class UsersService {
 
   async getUserPurchaseHistory(
     query: PurchaseHistoryQueryDto,
-    userId: number,
+    userId: string,
   ): Promise<PageData<OrderItemEntity>> {
     const { page, pageSize, order, sortBy, search } = query;
     const qb = this.orderItemRepository.createQueryBuilder('item');
@@ -192,7 +192,7 @@ export class UsersService {
   }
 
   async updateUserAddress(
-    addressId: number,
+    addressId: string,
     data: UpdateUserAddressDto,
     user: UserAuth,
   ): Promise<UserAddressEntity> {
@@ -218,7 +218,7 @@ export class UsersService {
     });
   }
 
-  async deleteAddress(addressId: number, user: UserAuth) {
+  async deleteAddress(addressId: string, user: UserAuth) {
     await this.validateUserAndAddress(addressId, user);
     await this.userAddressRepository.delete({
       id: addressId,
@@ -227,7 +227,7 @@ export class UsersService {
     return 'success';
   }
 
-  private async validateUserAndAddress(addressId: number, user: UserAuth) {
+  private async validateUserAndAddress(addressId: string, user: UserAuth) {
     const userAddressEntity = await this.userAddressRepository.findOne({
       where: {
         id: addressId,

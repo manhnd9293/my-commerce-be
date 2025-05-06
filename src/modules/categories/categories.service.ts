@@ -4,9 +4,9 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { In, Repository } from 'typeorm';
-import { FileStorageService } from '../common/file-storage.service';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 
 @Injectable()
 export class CategoriesService {
@@ -76,7 +76,7 @@ export class CategoriesService {
     return categories;
   }
 
-  async findOne(id: number): Promise<Category | null> {
+  async findOne(id: string): Promise<Category | null> {
     const category = await this.categoryRepository.findOne({
       where: {
         id,
@@ -94,7 +94,7 @@ export class CategoriesService {
   }
 
   async update(
-    id: number,
+    id: string,
     updateCategoryDto: UpdateCategoryDto,
     imageFile: Express.Multer.File,
   ) {
@@ -131,7 +131,7 @@ export class CategoriesService {
     return this.categoryRepository.save(category);
   }
 
-  async remove(data: { ids: number[] }) {
+  async remove(data: { ids: string[] }) {
     const categories = await this.categoryRepository.find({
       where: {
         id: In(data.ids),

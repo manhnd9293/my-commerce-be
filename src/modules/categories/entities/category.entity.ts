@@ -7,8 +7,8 @@ export class Category extends AbstractBaseEntity {
   @Column({ name: 'name', type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ name: 'image_file_id', type: 'bigint', nullable: true })
-  imageFileId: number;
+  @Column({ name: 'image_file_id', type: 'varchar', nullable: true })
+  imageFileId: string;
 
   @ManyToOne(() => Asset)
   @JoinColumn({ name: 'image_file_id', referencedColumnName: 'id' })

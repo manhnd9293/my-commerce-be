@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Param, Patch, Put } from '@nestjs/common';
 import { User } from '../../decorators/user.decorator';
 import { CartItemDto } from './dtos/cart-item.dto';
 import { CartsService } from './carts.service';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { ApiTags } from '@nestjs/swagger';
 import { CartCheckOutUpdateDto } from '../orders/dto/cart-check-out-update.dto';
 
@@ -25,6 +25,6 @@ export class CartsController {
 
   @Delete('item/:id')
   deleteCartItem(@Param('id') id: string, @User() user: UserAuth) {
-    return this.cartsService.removeCartItem(+id, user);
+    return this.cartsService.removeCartItem(id, user);
   }
 }

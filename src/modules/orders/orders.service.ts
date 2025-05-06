@@ -11,15 +11,13 @@ import { OrderItemEntity } from './entities/order-item.entity';
 import { CartItemEntity } from '../carts/entities/cart-item.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Transactional } from 'typeorm-transactional';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { ProductVariant } from '../products/entities/product-variant.entity';
-import { FileStorageService } from '../common/file-storage.service';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { PageData } from '../../utils/common/page-data';
 import { UserRole } from '../../utils/enums/user-role';
 import { Product } from '../products/entities/product.entity';
-import { ProductRatingEntity } from '../product-rating/entities/product-rating.entity';
-import { ProductRatingMediaEntity } from '../product-rating/entities/product-rating-media.entity';
 
 @Injectable()
 export class OrdersService {
@@ -182,7 +180,7 @@ export class OrdersService {
     return pageData;
   }
 
-  async getOrderDetail(id: number, user: UserAuth) {
+  async getOrderDetail(id: string, user: UserAuth) {
     const orderEntity = await this.orderRepository.findOne({
       where: {
         id,

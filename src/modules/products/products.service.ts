@@ -3,20 +3,21 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { ProductColor } from './entities/product-color.entity';
 import { ProductSize } from './entities/product-size.entity';
 import { ProductVariant } from './entities/product-variant.entity';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { Category } from '../categories/entities/category.entity';
 import { Transactional } from 'typeorm-transactional';
-import { FileStorageService } from '../common/file-storage.service';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import { StorageTopLevelFolder } from '../../utils/enums/storage-to-level-folder';
 import { v4 as uuidv4 } from 'uuid';
 import { ProductImage } from './entities/product-image.entity';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { BaseQueryDto } from '../../utils/common/base-query.dto';
 import { PageData } from '../../utils/common/page-data';
+import { Asset } from '../common/entities/asset.entity';
 
 @Injectable()
 export class ProductsService {
@@ -33,6 +34,8 @@ export class ProductsService {
     private readonly productImageRepository: Repository<ProductImage>,
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(Asset)
+    private readonly assetRepository: Repository<Asset>,
     private readonly fileStorageService: FileStorageService,
   ) {}
 
@@ -46,14 +49,34 @@ export class ProductsService {
     if (!category) {
       throw new BadRequestException("Product's category not exist)");
     }
+    const assetIds = createProductDto.productMedia;
+    const countMedia = await this.assetRepository.count({
+      where: {
+        id: In(assetIds),
+      },
+    });
+
+    if (countMedia < new Set(assetIds).size) {
+      throw new BadRequestException('Some media not exist');
+    }
 
     const product = this.productRepository.create({
-      categoryId: Number(createProductDto.categoryId),
+      categoryId: createProductDto.categoryId,
       name: createProductDto.name,
       description: createProductDto.description,
       createdById: user.userId,
     });
+
     const newProduct = await this.productRepository.save(product);
+
+    const productMedia = assetIds.map((id, index) =>
+      this.productImageRepository.create({
+        productId: newProduct.id,
+        assetId: id,
+        pos: index,
+      }),
+    );
+    await this.productImageRepository.save(productMedia);
 
     let newColors = null;
     if (
@@ -93,7 +116,6 @@ export class ProductsService {
     }
 
     await this.productVariantRepository.save(variants);
-
     return this.productRepository.findOne({
       where: {
         id: newProduct.id,
@@ -120,6 +142,9 @@ export class ProductsService {
     const products = await queryBuilder.getMany();
     await Promise.all(
       products.map(async (product) => {
+        if (product.productImages.length === 0) {
+          return;
+        }
         product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
           product.productImages[0].assetId,
         );
@@ -137,7 +162,8 @@ export class ProductsService {
       .leftJoinAndSelect('product.productColors', 'productColors')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
-      .leftJoinAndSelect('productImages.asset', 'asset');
+      .leftJoinAndSelect('productImages.asset', 'asset')
+      .orderBy('productImages.pos', 'ASC');
 
     if (categoryId) {
       queryBuilder.andWhere('category.id = :categoryId', { categoryId });
@@ -161,15 +187,21 @@ export class ProductsService {
       totalPage: Math.ceil(count / pageSize),
     };
     for (const product of products) {
+      if (product.productImages.length === 0) {
+        continue;
+      }
+      const thumbnailImage = product.productImages.find(
+        (image) => image.pos === 0,
+      );
       product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
-        product.productImages[0].assetId,
+        thumbnailImage.assetId,
       );
     }
 
     return pageData;
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const product = await this.productRepository
       .createQueryBuilder('product')
       .andWhere('product.id = :productId', { productId: id })
@@ -180,29 +212,45 @@ export class ProductsService {
       .leftJoinAndSelect('productImages.asset', 'asset')
       .leftJoinAndSelect('product.productVariants', 'productVariants')
       .addSelect('product.description')
-      .orderBy('productImages.id', 'ASC')
+      .orderBy('productImages.pos', 'ASC')
       .getOne();
 
     if (!product) {
       throw new BadRequestException('Product not found');
     }
-    product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
-      product.productImages[0].assetId,
-    );
+    if (product.productImages.length > 0) {
+      product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+        product.productImages[0].assetId,
+      );
+    }
+
     if (product.productImages) {
-      for (const productImage of product.productImages) {
-        const preSignUrl = await this.fileStorageService.createPresignedUrl(
-          productImage.assetId,
-        );
-        productImage.asset.preSignUrl = preSignUrl;
-      }
+      // for (const productImage of product.productImages) {
+      //   const preSignUrl = await this.fileStorageService.createPresignedUrl(
+      //     productImage.assetId,
+      //   );
+      //   productImage.asset.preSignUrl = preSignUrl;
+      // }
+      await Promise.all(
+        product.productImages.map(async (image) => {
+          return this.fileStorageService
+            .createPresignedUrl(image.assetId)
+            .then((url) => {
+              image.asset.preSignUrl = url;
+            });
+        }),
+      );
     }
 
     return product;
   }
 
   @Transactional()
-  async update(updateProductDto: UpdateProductDto, user: UserAuth) {
+  async update(
+    productId: string,
+    updateProductDto: UpdateProductDto,
+    user: UserAuth,
+  ) {
     const category = await this.categoryRepository.findOne({
       where: {
         id: updateProductDto.categoryId,
@@ -215,7 +263,7 @@ export class ProductsService {
 
     const product = await this.productRepository.findOne({
       where: {
-        id: updateProductDto.id,
+        id: productId,
       },
       relations: {
         productImages: true,
@@ -229,7 +277,7 @@ export class ProductsService {
     }
 
     await this.productRepository.update(
-      { id: updateProductDto.id },
+      { id: productId },
       {
         updatedById: user.userId,
         categoryId: updateProductDto.categoryId,
@@ -238,26 +286,6 @@ export class ProductsService {
         price: updateProductDto.price,
       },
     );
-
-    const remainImageIds = updateProductDto.productImages.map(
-      (productImage) => productImage.id,
-    );
-
-    const deletedImageIds = product.productImages
-      .map((productImage) => productImage.id)
-      .filter((id) => !remainImageIds.includes(id));
-
-    await this.productImageRepository.delete({
-      id: In(deletedImageIds),
-    });
-
-    const deleteAssetIds = product.productImages
-      .filter((image) => deletedImageIds.includes(image.id))
-      .map((productImage) => productImage.assetId);
-
-    for (const assetId of deleteAssetIds) {
-      await this.fileStorageService.deleteAsset(assetId);
-    }
 
     const remainSizeIds = updateProductDto.productSizes
       .filter((size) => size.id !== null && size.id !== undefined)
@@ -279,7 +307,11 @@ export class ProductsService {
     const newSizes = updateProductDto.productSizes
       .filter((size) => !size.id)
       .map((size) =>
-        this.productSizeRepository.create({ ...size, productId: product.id }),
+        this.productSizeRepository.create({
+          ...size,
+          productId: product.id,
+          id: undefined,
+        }),
       );
     const newProductSizes = await this.productSizeRepository.save(newSizes);
 
@@ -317,7 +349,7 @@ export class ProductsService {
           this.productVariantRepository.create({
             productSizeId: newSize.id,
             productColorId: colorId,
-            productId: updateProductDto.id,
+            productId: productId,
             createdById: user.userId,
           }),
         );
@@ -328,7 +360,7 @@ export class ProductsService {
       for (const sizeId of remainSizeIds.length > 0 ? remainSizeIds : [null]) {
         newProductVariants.push(
           this.productVariantRepository.create({
-            productId: updateProductDto.id,
+            productId: productId,
             productColorId: newColor.id,
             productSizeId: sizeId,
             createdById: user.userId,
@@ -341,7 +373,7 @@ export class ProductsService {
       for (const newSize of newProductSizes) {
         newProductVariants.push(
           this.productVariantRepository.create({
-            productId: updateProductDto.id,
+            productId: productId,
             productColorId: newColor.id,
             productSizeId: newSize.id,
             createdById: user.userId,
@@ -353,13 +385,13 @@ export class ProductsService {
 
     return this.productRepository.findOne({
       where: {
-        id: updateProductDto.id,
+        id: productId,
       },
     });
   }
 
   async updateImages(
-    id: number,
+    id: string,
     productImageFiles: Array<Express.Multer.File>,
     user: UserAuth,
   ) {
@@ -398,11 +430,11 @@ export class ProductsService {
     return 'update success';
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} product`;
   }
 
-  async findSimilarProducts(productId: number, query: BaseQueryDto) {
+  async findSimilarProducts(productId: string, query: BaseQueryDto) {
     const { page, pageSize } = query;
     const currentProduct = await this.productRepository.findOne({
       where: { id: productId },
@@ -442,5 +474,75 @@ export class ProductsService {
     };
 
     return response;
+  }
+
+  async updateProductMedia(
+    productId: string,
+    data: { updateIds: string[] },
+    user: UserAuth,
+  ) {
+    const assetIdToPosition = data.updateIds.reduce<Map<string, number>>(
+      (map, id, index) => {
+        map.set(id, index);
+        return map;
+      },
+      new Map<string, number>(),
+    );
+    const existedProductImages = await this.productImageRepository.find({
+      where: {
+        assetId: In(data.updateIds),
+        productId,
+      },
+    });
+    const deletedProductImages = await this.productImageRepository.find({
+      where: {
+        assetId: Not(In(data.updateIds)),
+        productId,
+      },
+    });
+    const existedAssetIds = existedProductImages.map((image) => image.assetId);
+    const newProductImages = data.updateIds
+      .filter((id) => !existedAssetIds.includes(id))
+      .map((id) => {
+        return this.productImageRepository.create({
+          productId,
+          assetId: id,
+        });
+      });
+
+    const allMedia = [...existedProductImages, ...newProductImages].map(
+      (media) => ({
+        ...media,
+        pos: assetIdToPosition.get(media.assetId),
+      }),
+    );
+
+    await this.productImageRepository.delete({
+      assetId: In(deletedProductImages.map((image) => image.assetId)),
+    });
+
+    return this.productImageRepository.save(allMedia);
+  }
+
+  @Transactional()
+  async deleteMedia(productId: string, data: { assetIds: string[] }) {
+    const deleteResult = await this.productImageRepository.delete({
+      productId,
+      assetId: In(data.assetIds),
+    });
+    const remainedMedia = await this.productImageRepository.find({
+      where: {
+        productId,
+      },
+      order: {
+        pos: 'ASC',
+      },
+    });
+    remainedMedia.forEach((media, index) => {
+      media.pos = index;
+    });
+    await this.productImageRepository.save(remainedMedia);
+
+    return deleteResult;
   }
 }

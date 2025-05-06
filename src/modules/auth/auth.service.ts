@@ -7,11 +7,11 @@ import {
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { JwtPayload } from './jwt.strategy';
+import { JwtPayload } from './strategies/jwt.strategy';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../users/entity/user.entity';
 import { Repository } from 'typeorm';
-import { FileStorageService } from '../common/file-storage.service';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import * as process from 'node:process';
 import { OAuth2Client } from 'google-auth-library';
 

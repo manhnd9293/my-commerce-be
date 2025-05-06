@@ -22,7 +22,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
 import { User } from '../../decorators/user.decorator';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -58,8 +58,8 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.categoriesService.findOne(+id);
+  findOne(@Param('id') id: string) {
+    return this.categoriesService.findOne(id);
   }
 
   @Put(':id')
@@ -67,7 +67,7 @@ export class CategoriesController {
   @ApiConsumes('multipart/form-data')
   @Roles([UserRole.Admin])
   update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
     @UploadedFile(
       new ParseFilePipe({

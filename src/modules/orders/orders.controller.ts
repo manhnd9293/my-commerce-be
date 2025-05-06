@@ -11,7 +11,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from '../../decorators/user.decorator';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
@@ -40,7 +40,7 @@ export class OrdersController {
 
   @Get('/my-order')
   getMyOrder(@User() user: UserAuth, @Query() query: OrderQueryDto) {
-    if (Number(query.userId) !== user.userId) {
+    if (query.userId !== user.userId) {
       throw new ForbiddenException('Invalid request');
     }
     return this.ordersService.getOrders(query);
@@ -49,6 +49,6 @@ export class OrdersController {
   @Roles([UserRole.Admin, UserRole.Buyer])
   @Get(':id')
   getOrderDetail(@User() user: UserAuth, @Param('id') id: string) {
-    return this.ordersService.getOrderDetail(+id, user);
+    return this.ordersService.getOrderDetail(id, user);
   }
 }

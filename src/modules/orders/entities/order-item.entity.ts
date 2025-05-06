@@ -8,8 +8,8 @@ import { OrderItemState } from '../../../utils/enums/order-item-state';
 @Entity('order_items')
 export class OrderItemEntity extends AbstractBaseEntity {
   @IsNotEmpty()
-  @Column({ name: 'product_variant_id', type: 'int', nullable: false })
-  productVariantId: number;
+  @Column({ name: 'product_variant_id', type: 'varchar', nullable: false })
+  productVariantId: string;
 
   @ManyToOne(() => ProductVariant)
   @JoinColumn({
@@ -26,9 +26,9 @@ export class OrderItemEntity extends AbstractBaseEntity {
   @Column({ name: 'unit_price', type: 'int', nullable: false })
   unitPrice: number;
 
-  @Column({ name: 'order_id', type: 'int', nullable: false })
+  @Column({ name: 'order_id', type: 'varchar', nullable: false })
   @Index()
-  orderId: number;
+  orderId: string;
 
   @ManyToOne(() => OrderEntity, (order) => order.orderItems)
   @JoinColumn({

@@ -20,35 +20,35 @@ export class MigrationDataService {
   ) {}
 
   async recoverProductColor() {
-    const products = await this.productRepository.find({
-      relations: {
-        productColors: true,
-        productVariants: true,
-      },
-    });
-
-    const updateProductVariants = [];
-    for (const product of products) {
-      const recoverProductVariants = product.productVariants.filter(
-        (p) => !p.productColorId && !p.productSizeId,
-      );
-      for (let i = 0; i < product.productColors.length; i++) {
-        recoverProductVariants[i].productColorId = product.productColors[i].id;
-      }
-      updateProductVariants.push(...recoverProductVariants);
-    }
-    await this.productVariantRepository.save(updateProductVariants);
+    // const products = await this.productRepository.find({
+    //   relations: {
+    //     productColors: true,
+    //     productVariants: true,
+    //   },
+    // });
+    //
+    // const updateProductVariants = [];
+    // for (const product of products) {
+    //   const recoverProductVariants = product.productVariants.filter(
+    //     (p) => !p.productColorId && !p.productSizeId,
+    //   );
+    //   for (let i = 0; i < product.productColors.length; i++) {
+    //     recoverProductVariants[i].productColorId = product.productColors[i].id;
+    //   }
+    //   updateProductVariants.push(...recoverProductVariants);
+    // }
+    // await this.productVariantRepository.save(updateProductVariants);
   }
 
   async addDefaultProductVariant() {
-    const products = await this.productRepository.find({});
-    const productVariants = products.map((p) =>
-      this.productVariantRepository.create({
-        productId: p.id,
-        productSizeId: null,
-        productColorId: null,
-      }),
-    );
-    await this.productVariantRepository.save(productVariants);
+    // const products = await this.productRepository.find({});
+    // const productVariants = products.map((p) =>
+    //   this.productVariantRepository.create({
+    //     productId: p.id,
+    //     productSizeId: null,
+    //     productColorId: null,
+    //   }),
+    // );
+    // await this.productVariantRepository.save(productVariants);
   }
 }

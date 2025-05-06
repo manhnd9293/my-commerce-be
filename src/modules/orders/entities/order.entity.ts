@@ -13,9 +13,9 @@ import { IsString, MaxLength } from 'class-validator';
 
 @Entity('orders')
 export class OrderEntity extends AbstractBaseEntity {
-  @Column({ name: 'user_id', type: 'int', nullable: true })
+  @Column({ name: 'user_id', type: 'varchar', nullable: true })
   @Index()
-  userId: number;
+  userId: string;
 
   @ManyToOne(() => UserEntity, (user) => user.orders)
   @JoinColumn({

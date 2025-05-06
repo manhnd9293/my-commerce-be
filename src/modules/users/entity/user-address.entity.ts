@@ -4,8 +4,8 @@ import { UserEntity } from './user.entity';
 
 @Entity('user_addresses')
 export class UserAddressEntity extends AbstractBaseEntity {
-  @Column({ name: 'user_id', nullable: false, type: 'int' })
-  userId: number;
+  @Column({ name: 'user_id', nullable: false, type: 'varchar' })
+  userId: string;
 
   @ManyToOne(() => UserEntity, (user) => user.addresses)
   @JoinColumn({

@@ -12,8 +12,8 @@ export class ProductColor extends AbstractBaseEntity {
   name: string;
 
   @IsNumber()
-  @Column({ name: 'product_id', type: 'bigint' })
-  productId: number;
+  @Column({ name: 'product_id', type: 'varchar' })
+  productId: string;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id', referencedColumnName: 'id' })

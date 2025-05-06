@@ -18,7 +18,7 @@ import { OrderEntity } from '../orders/entities/order.entity';
 import { OrderItemEntity } from '../orders/entities/order-item.entity';
 import { UserEntity } from '../users/entity/user.entity';
 import { ProductVariant } from '../products/entities/product-variant.entity';
-import { FileStorageService } from '../common/file-storage.service';
+import { FileStorageService } from '../common/file-storage/file-storage.service';
 import { Category } from '../categories/entities/category.entity';
 
 type DetailPeriod = 'MONTH' | 'DAY' | 'DAY OF WEEK' | 'HOUR';

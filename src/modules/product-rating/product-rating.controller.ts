@@ -9,7 +9,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { User } from '../../decorators/user.decorator';
-import { UserAuth } from '../auth/jwt.strategy';
+import { UserAuth } from '../auth/strategies/jwt.strategy';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { CreateProductRatingDto } from './dto/create-product-rating.dto';
@@ -33,7 +33,7 @@ export class ProductRatingController {
     @Param('productId') productId: string,
     @Query() query: ProductRatingQueryDto,
   ) {
-    return this.productRatingService.getProductRating(+productId, query);
+    return this.productRatingService.getProductRating(productId, query);
   }
 
   @Post(':productId')
@@ -46,7 +46,7 @@ export class ProductRatingController {
     @Body() data: CreateProductRatingDto,
   ) {
     return this.productRatingService.createRating(
-      +productId,
+      productId,
       data,
       productRatingMedia,
       user,
