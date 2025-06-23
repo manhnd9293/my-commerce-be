@@ -9,6 +9,8 @@ import { Asset } from '../common/entities/asset.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { Category } from '../categories/entities/category.entity';
 import { ProductImage } from './entities/product-image.entity';
+import { ProductOptionEntity } from './entities/product-option.entity';
+import { ProductOptionValueEntity } from './entities/product-option-value.entity';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { ProductImage } from './entities/product-image.entity';
       ProductVariant,
       Category,
       ProductImage,
+      ProductOptionEntity,
+      ProductOptionValueEntity,
     ]),
   ],
   controllers: [ProductsController],

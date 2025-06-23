@@ -59,8 +59,6 @@ export class CartsService {
           product: {
             productImages: true,
           },
-          productSize: true,
-          productColor: true,
         },
       },
     });

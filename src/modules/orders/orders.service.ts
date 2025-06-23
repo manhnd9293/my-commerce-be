@@ -191,8 +191,6 @@ export class OrdersService {
             product: {
               productImages: true,
             },
-            productColor: true,
-            productSize: true,
           },
         },
       },

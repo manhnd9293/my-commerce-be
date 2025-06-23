@@ -23,6 +23,7 @@ import { BaseQueryDto } from '../../utils/common/base-query.dto';
 import { Public } from '../../decorators/public.decorator';
 import { Roles } from '../../decorators/roles.decorator';
 import { UserRole } from '../../utils/enums/user-role';
+import { NewCreateProductDto } from './dto/new-create-product.dto';
 
 @Controller('products')
 @ApiTags('Products')
@@ -105,5 +106,11 @@ export class ProductsController {
   @Roles([UserRole.Admin])
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
+  }
+
+  @Public()
+  @Post('/create-new')
+  createNewProduct(@Body() data: NewCreateProductDto) {
+    return this.productsService.createNewProduct(data);
   }
 }

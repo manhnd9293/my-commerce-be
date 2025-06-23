@@ -1,12 +1,11 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { AbstractBaseEntity } from '../../base/entities/abstract-base.entity';
-import { ProductSize } from './product-size.entity';
 import { Category } from '../../categories/entities/category.entity';
-import { ProductColor } from './product-color.entity';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ProductVariant } from './product-variant.entity';
 import { ProductImage } from './product-image.entity';
 import { ProductRatingEntity } from '../../product-rating/entities/product-rating.entity';
+import { ProductOptionEntity } from './product-option.entity';
 
 @Entity('products')
 export class Product extends AbstractBaseEntity {
@@ -22,18 +21,6 @@ export class Product extends AbstractBaseEntity {
   @Column({ name: 'description', type: 'text', nullable: true, select: false })
   description: string;
 
-  @OneToMany(() => ProductSize, (ps) => ps.product, {
-    orphanedRowAction: 'disable',
-    cascade: false,
-  })
-  productSizes?: ProductSize[];
-
-  @OneToMany(() => ProductColor, (pc) => pc.product, {
-    orphanedRowAction: 'disable',
-    cascade: false,
-  })
-  productColors?: ProductColor[];
-
   @OneToMany(() => ProductVariant, (pv) => pv.product, {
     orphanedRowAction: 'disable',
     cascade: false,
@@ -41,7 +28,7 @@ export class Product extends AbstractBaseEntity {
   productVariants?: ProductVariant[];
 
   @IsNotEmpty()
-  @Column({ name: 'category_id', type: 'varchar' })
+  @Column({ name: 'category_id', type: 'varchar', nullable: true })
   categoryId: string;
 
   @ManyToOne(() => Category)
@@ -61,4 +48,7 @@ export class Product extends AbstractBaseEntity {
 
   @OneToMany(() => ProductRatingEntity, (pr) => pr.product)
   ratings: ProductRatingEntity[];
+
+  @OneToMany(() => ProductOptionEntity, (po) => po.product)
+  productOptions: ProductOptionEntity[];
 }

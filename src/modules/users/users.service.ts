@@ -74,8 +74,6 @@ export class UsersService {
       relations: {
         cart: {
           productVariant: {
-            productColor: true,
-            productSize: true,
             product: {
               productImages: true,
             },

@@ -18,6 +18,9 @@ import { ProductQueryDto } from './dto/product-query.dto';
 import { BaseQueryDto } from '../../utils/common/base-query.dto';
 import { PageData } from '../../utils/common/page-data';
 import { Asset } from '../common/entities/asset.entity';
+import { ProductOptionEntity } from './entities/product-option.entity';
+import { ProductOptionValueEntity } from './entities/product-option-value.entity';
+import { NewCreateProductDto } from './dto/new-create-product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -36,6 +39,10 @@ export class ProductsService {
     private readonly categoryRepository: Repository<Category>,
     @InjectRepository(Asset)
     private readonly assetRepository: Repository<Asset>,
+    @InjectRepository(ProductOptionEntity)
+    private readonly productOptionRepository: Repository<ProductOptionEntity>,
+    @InjectRepository(ProductOptionValueEntity)
+    private readonly productOptionValueRepository: Repository<ProductOptionValueEntity>,
     private readonly fileStorageService: FileStorageService,
   ) {}
 
@@ -78,53 +85,50 @@ export class ProductsService {
     );
     await this.productImageRepository.save(productMedia);
 
-    let newColors = null;
     if (
-      createProductDto.productColors &&
-      createProductDto.productColors.length > 0
+      createProductDto.productOptions &&
+      createProductDto.productOptions.length > 0
     ) {
-      const productColors = createProductDto.productColors.map((pc) => {
-        const productColor = this.productColorRepository.create(pc);
-        productColor.productId = newProduct.id;
-        return productColor;
-      });
-      newColors = await this.productColorRepository.save(productColors);
+      const newOptionEntities = createProductDto.productOptions.map((op) => ({
+        ...op,
+        productId: newProduct.id,
+      }));
+      await this.productOptionRepository.save(newOptionEntities);
+
+      const newOptionValues = createProductDto.productOptions.reduce(
+        (list, option) => {
+          const optionValues = option.optionValues.map((ov) => ({
+            ...ov,
+            productOptionId: option.id,
+          }));
+          list.push(...optionValues);
+          return list;
+        },
+        [],
+      );
+      await this.productOptionValueRepository.save(newOptionValues);
     }
 
-    let newSizes = null;
     if (
-      createProductDto.productSizes &&
-      createProductDto.productSizes.length > 0
+      createProductDto.productVariants &&
+      createProductDto.productVariants.length > 0
     ) {
-      const productSizes = createProductDto.productSizes.map((ps) => {
-        const productSize = this.productSizeRepository.create(ps);
-        productSize.productId = newProduct.id;
-        return productSize;
-      });
-      newSizes = await this.productSizeRepository.save(productSizes);
+      await this.productVariantRepository.save(
+        createProductDto.productVariants.map((pv) => ({
+          ...pv,
+          productId: newProduct.id,
+        })),
+      );
     }
 
-    const variants = [];
-    for (const color of newColors || [null]) {
-      for (const size of newSizes || [null]) {
-        const productVariant = this.productVariantRepository.create();
-        productVariant.productColorId = color?.id || null;
-        productVariant.productSizeId = size?.id || null;
-        productVariant.productId = newProduct.id;
-        variants.push(productVariant);
-      }
-    }
-
-    await this.productVariantRepository.save(variants);
     return this.productRepository.findOne({
       where: {
         id: newProduct.id,
       },
       relations: {
-        productColors: true,
-        productSizes: true,
         productVariants: true,
         category: true,
+        productOptions: true,
       },
     });
   }
@@ -132,8 +136,6 @@ export class ProductsService {
   async findAll() {
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
-      .leftJoinAndSelect('product.productSizes', 'productSizes')
-      .leftJoinAndSelect('product.productColors', 'productColors')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
       .leftJoinAndSelect('productImages.asset', 'asset');
@@ -205,12 +207,12 @@ export class ProductsService {
     const product = await this.productRepository
       .createQueryBuilder('product')
       .andWhere('product.id = :productId', { productId: id })
-      .leftJoinAndSelect('product.productSizes', 'productSizes')
-      .leftJoinAndSelect('product.productColors', 'productColors')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
       .leftJoinAndSelect('productImages.asset', 'asset')
       .leftJoinAndSelect('product.productVariants', 'productVariants')
+      .leftJoinAndSelect('product.productOptions', 'productOptions')
+      .leftJoinAndSelect('productOptions.optionValues', 'optionValues')
       .addSelect('product.description')
       .orderBy('productImages.pos', 'ASC')
       .getOne();
@@ -225,12 +227,6 @@ export class ProductsService {
     }
 
     if (product.productImages) {
-      // for (const productImage of product.productImages) {
-      //   const preSignUrl = await this.fileStorageService.createPresignedUrl(
-      //     productImage.assetId,
-      //   );
-      //   productImage.asset.preSignUrl = preSignUrl;
-      // }
       await Promise.all(
         product.productImages.map(async (image) => {
           return this.fileStorageService
@@ -267,8 +263,6 @@ export class ProductsService {
       },
       relations: {
         productImages: true,
-        productSizes: true,
-        productColors: true,
       },
     });
 
@@ -287,101 +281,49 @@ export class ProductsService {
       },
     );
 
-    const remainSizeIds = updateProductDto.productSizes
-      .filter((size) => size.id !== null && size.id !== undefined)
-      .map((size) => size.id);
-    await this.productSizeRepository.save(
-      updateProductDto.productSizes.filter((size) =>
-        remainSizeIds.includes(size.id),
-      ),
-    );
-    const deleteSizeIds = product.productSizes
-      .filter((size) => !remainSizeIds.includes(size.id))
-      .map((size) => size.id);
-    await this.productVariantRepository.delete({
-      productSizeId: In(deleteSizeIds),
+    // const remainSizeIds = updateProductDto.productSizes
+    //   .filter((size) => size.id !== null && size.id !== undefined)
+    //   .map((size) => size.id);
+    // await this.productSizeRepository.save(
+    //   updateProductDto.productSizes.filter((size) =>
+    //     remainSizeIds.includes(size.id),
+    //   ),
+    // );
+    //
+    // const remainColorIds = updateProductDto.productColors
+    //   .filter((color) => color.id !== null && color.id !== undefined)
+    //   .map((color) => color.id);
+    // await this.productColorRepository.save(
+    //   updateProductDto.productColors.filter((c) =>
+    //     remainColorIds.includes(c.id),
+    //   ),
+    // );
+    const productVariants = updateProductDto.productVariants;
+    const variantIdToPrice = productVariants.reduce<{
+      [key: string]: number;
+    }>((map, variant) => {
+      map[variant.id] = variant.price;
+      return map;
+    }, {});
+
+    const variantIdToQuantity = productVariants.reduce<{
+      [key: string]: number;
+    }>((map, variant) => {
+      map[variant.id] = variant.quantity;
+      return map;
+    }, {});
+
+    const allVariants = await this.productVariantRepository.find({
+      where: {
+        productId: productId,
+      },
     });
-    await this.productSizeRepository.delete({
-      id: In(deleteSizeIds),
+    allVariants.forEach((v) => {
+      v.price = variantIdToPrice[v.id] || 0;
+      v.quantity = variantIdToQuantity[v.id] || 0;
     });
-    const newSizes = updateProductDto.productSizes
-      .filter((size) => !size.id)
-      .map((size) =>
-        this.productSizeRepository.create({
-          ...size,
-          productId: product.id,
-          id: undefined,
-        }),
-      );
-    const newProductSizes = await this.productSizeRepository.save(newSizes);
 
-    const remainColorIds = updateProductDto.productColors
-      .filter((color) => color.id !== null && color.id !== undefined)
-      .map((color) => color.id);
-    await this.productColorRepository.save(
-      updateProductDto.productColors.filter((c) =>
-        remainColorIds.includes(c.id),
-      ),
-    );
-    const deleteColorIds = product.productColors
-      .filter((color) => !remainColorIds.includes(color.id))
-      .map((color) => color.id);
-    await this.productVariantRepository.delete({
-      productColorId: In(deleteColorIds),
-    });
-    await this.productColorRepository.delete({
-      id: In(deleteColorIds),
-    });
-    const newColors = updateProductDto.productColors
-      .filter((color) => !color.id)
-      .map((color) =>
-        this.productColorRepository.create({ ...color, productId: product.id }),
-      );
-
-    const newProductColors = await this.productColorRepository.save(newColors);
-
-    const newProductVariants = [];
-    for (const newSize of newProductSizes) {
-      for (const colorId of remainColorIds.length > 0
-        ? remainColorIds
-        : [null]) {
-        newProductVariants.push(
-          this.productVariantRepository.create({
-            productSizeId: newSize.id,
-            productColorId: colorId,
-            productId: productId,
-            createdById: user.userId,
-          }),
-        );
-      }
-    }
-
-    for (const newColor of newProductColors) {
-      for (const sizeId of remainSizeIds.length > 0 ? remainSizeIds : [null]) {
-        newProductVariants.push(
-          this.productVariantRepository.create({
-            productId: productId,
-            productColorId: newColor.id,
-            productSizeId: sizeId,
-            createdById: user.userId,
-          }),
-        );
-      }
-    }
-
-    for (const newColor of newProductColors) {
-      for (const newSize of newProductSizes) {
-        newProductVariants.push(
-          this.productVariantRepository.create({
-            productId: productId,
-            productColorId: newColor.id,
-            productSizeId: newSize.id,
-            createdById: user.userId,
-          }),
-        );
-      }
-    }
-    await this.productVariantRepository.save(newProductVariants);
+    await this.productVariantRepository.save(allVariants);
 
     return this.productRepository.findOne({
       where: {
@@ -544,5 +486,85 @@ export class ProductsService {
     await this.productImageRepository.save(remainedMedia);
 
     return deleteResult;
+  }
+
+  @Transactional()
+  async createNewProduct(data: NewCreateProductDto) {
+    const { name, productOptions } = data;
+    const product = this.productRepository.create({ name });
+    const savedProduct = await this.productRepository.save(product);
+
+    const newOptions = productOptions.map((option) =>
+      this.productOptionRepository.create({
+        name: option.name,
+        productId: savedProduct.id,
+      }),
+    );
+    const newSavedOptions = await this.productOptionRepository.save(newOptions);
+    const nameToOptionId = newSavedOptions.reduce<Map<string, string>>(
+      (map, option) => {
+        map.set(option.name, option.id);
+        return map;
+      },
+      new Map(),
+    );
+    const allOptionValuesEntities: ProductOptionValueEntity[] =
+      productOptions.reduce((list, option) => {
+        const optionValues = option.values.reduce(
+          (listValue, value) =>
+            listValue.concat(
+              this.productOptionValueRepository.create({
+                name: value,
+                productOptionId: nameToOptionId.get(option.name),
+              }),
+            ),
+          [],
+        );
+        return list.concat(optionValues);
+      }, []);
+
+    const savedProductOptionsValueEntities =
+      await this.productOptionValueRepository.save(allOptionValuesEntities);
+
+    const optionIdToOptionValueIds = savedProductOptionsValueEntities.reduce(
+      (map, op) => {
+        const currentList = map.get(op.productOptionId) || [];
+        map.set(op.productOptionId, currentList.concat(op.id));
+        return map;
+      },
+      new Map(),
+    );
+
+    let variants = [{}];
+    for (const option of newSavedOptions) {
+      const newVariants = [];
+      for (const variant of variants) {
+        for (const optionValueId of optionIdToOptionValueIds.get(option.id)) {
+          newVariants.push({ ...variant, [option.id]: optionValueId });
+        }
+      }
+      variants = newVariants;
+    }
+    // const productVariants = variants
+    //   .map((v) =>
+    //     this.productVariantRepository.create({
+    //       options: v,
+    //       productId: savedProduct.id,
+    //     }),
+    //   )
+    //   .reduce((list, pv) => list.concat(pv), []);
+    // await this.productVariantRepository.save(productVariants);
+
+    return this.productRepository.findOne({
+      where: {
+        id: savedProduct.id,
+      },
+      relations: {
+        productOptions: {
+          optionValues: true,
+        },
+        productVariants: true,
+      },
+    });
   }
 }
