@@ -21,6 +21,8 @@ import { Asset } from '../common/entities/asset.entity';
 import { ProductOptionEntity } from './entities/product-option.entity';
 import { ProductOptionValueEntity } from './entities/product-option-value.entity';
 import { NewCreateProductDto } from './dto/new-create-product.dto';
+import { UpdateProductOptionDto } from './dto/update-product-option.dto';
+import { UpdateOptionValueDto } from './dto/update-option-value.dto';
 
 @Injectable()
 export class ProductsService {
@@ -298,7 +300,56 @@ export class ProductsService {
     //     remainColorIds.includes(c.id),
     //   ),
     // );
-    const productVariants = updateProductDto.productVariants;
+    const { productVariants, productOptions } = updateProductDto;
+    const optionIdToOption = productOptions.reduce<{
+      [key: string]: UpdateProductOptionDto;
+    }>((map, option) => {
+      map[option.id] = option;
+      return map;
+    }, {});
+
+    const optionValueIdToOptionValue = productOptions
+      .map((op) => op.optionValues)
+      .flat()
+      .reduce<{ [key: string]: UpdateOptionValueDto }>((map, ov) => {
+        map[ov.id] = ov;
+        return map;
+      }, {});
+
+    //todo: handle case add, remove option
+    const productOptionEntities = await this.productOptionRepository.find({
+      where: {
+        productId,
+      },
+    });
+    const updateOptionEntities = productOptionEntities.map((o) => {
+      const updateOption = optionIdToOption[o.id];
+      if (!updateOption) {
+        return o;
+      }
+      return { ...o, ...updateOption };
+    });
+    await this.productOptionRepository.save(updateOptionEntities);
+
+    const productOptionValueEntities =
+      await this.productOptionValueRepository.find({
+        where: {
+          productOptionId: In(productOptionEntities.map((o) => o.id)),
+        },
+      });
+    const updateProductOptionValueEntities = productOptionValueEntities.map(
+      (pov) => {
+        const updateOptionValueDto = optionValueIdToOptionValue[pov.id];
+        if (!updateOptionValueDto) {
+          return pov;
+        }
+        return { ...pov, ...updateOptionValueDto };
+      },
+    );
+    await this.productOptionValueRepository.save(
+      updateProductOptionValueEntities,
+    );
+
     const variantIdToPrice = productVariants.reduce<{
       [key: string]: number;
     }>((map, variant) => {
@@ -321,6 +372,12 @@ export class ProductsService {
     allVariants.forEach((v) => {
       v.price = variantIdToPrice[v.id] || 0;
       v.quantity = variantIdToQuantity[v.id] || 0;
+      const specs = v.specs;
+      for (const spec of specs) {
+        spec.optionName = optionIdToOption[spec.optionId].name;
+        spec.optionValueName =
+          optionValueIdToOptionValue[spec.optionValueId].name;
+      }
     });
 
     await this.productVariantRepository.save(allVariants);

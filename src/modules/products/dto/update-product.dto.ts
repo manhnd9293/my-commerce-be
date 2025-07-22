@@ -1,6 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { Product } from '../entities/product.entity';
 import { UpdateProductVariantDto } from './update-product-variant.dto';
+import { UpdateProductOptionDto } from './update-product-option.dto';
 
 export class UpdateProductDto extends PickType(Product, [
   'name',
@@ -14,4 +15,10 @@ export class UpdateProductDto extends PickType(Product, [
     type: UpdateProductVariantDto,
   })
   productVariants: UpdateProductVariantDto[];
+
+  @ApiProperty({
+    isArray: true,
+    type: UpdateProductOptionDto,
+  })
+  productOptions: UpdateProductOptionDto[];
 }
