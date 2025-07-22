@@ -23,6 +23,7 @@ import { ProductOptionValueEntity } from './entities/product-option-value.entity
 import { NewCreateProductDto } from './dto/new-create-product.dto';
 import { UpdateProductOptionDto } from './dto/update-product-option.dto';
 import { UpdateOptionValueDto } from './dto/update-option-value.dto';
+import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
 
 @Injectable()
 export class ProductsService {
@@ -271,6 +272,25 @@ export class ProductsService {
     if (!product) {
       throw new BadRequestException('product not found');
     }
+    const { productVariants, productOptions } = updateProductDto;
+
+    const optionIdSet = new Set();
+    for (const option of productOptions) {
+      if (optionIdSet.has(option.id)) {
+        throw new BadRequestException('Duplicated option id');
+      }
+      optionIdSet.add(option.id);
+    }
+
+    const optionValueIdSet = new Set();
+    for (const optionValue of productOptions
+      .map((po) => po.optionValues)
+      .flat()) {
+      if (optionValueIdSet.has(optionValue.id)) {
+        throw new BadRequestException('Duplicated option value id');
+      }
+      optionValueIdSet.add(optionValue.id);
+    }
 
     await this.productRepository.update(
       { id: productId },
@@ -283,24 +303,6 @@ export class ProductsService {
       },
     );
 
-    // const remainSizeIds = updateProductDto.productSizes
-    //   .filter((size) => size.id !== null && size.id !== undefined)
-    //   .map((size) => size.id);
-    // await this.productSizeRepository.save(
-    //   updateProductDto.productSizes.filter((size) =>
-    //     remainSizeIds.includes(size.id),
-    //   ),
-    // );
-    //
-    // const remainColorIds = updateProductDto.productColors
-    //   .filter((color) => color.id !== null && color.id !== undefined)
-    //   .map((color) => color.id);
-    // await this.productColorRepository.save(
-    //   updateProductDto.productColors.filter((c) =>
-    //     remainColorIds.includes(c.id),
-    //   ),
-    // );
-    const { productVariants, productOptions } = updateProductDto;
     const optionIdToOption = productOptions.reduce<{
       [key: string]: UpdateProductOptionDto;
     }>((map, option) => {
@@ -329,49 +331,86 @@ export class ProductsService {
       }
       return { ...o, ...updateOption };
     });
-    await this.productOptionRepository.save(updateOptionEntities);
+    const currentOptionIds = new Set(
+      productOptionEntities.map((poe) => poe.id),
+    );
+    const newOptions = productOptions.filter(
+      (po) => !currentOptionIds.has(po.id),
+    );
+    await this.productOptionRepository.save([
+      ...updateOptionEntities,
+      ...newOptions.map((newOption) =>
+        this.productOptionRepository.create({ ...newOption, productId }),
+      ),
+    ]);
 
-    const productOptionValueEntities =
+    const newOptionValueEntitiesFromNewOptions = newOptions.reduce(
+      (all, option) => {
+        const optionValueEntities = option.optionValues.map((ov) =>
+          this.productOptionValueRepository.create({
+            ...ov,
+            productOptionId: option.id,
+          }),
+        );
+
+        all.push(...optionValueEntities);
+        return all;
+      },
+      [],
+    );
+
+    const currentProductOptionValueEntities =
       await this.productOptionValueRepository.find({
         where: {
           productOptionId: In(productOptionEntities.map((o) => o.id)),
         },
       });
-    const updateProductOptionValueEntities = productOptionValueEntities.map(
-      (pov) => {
+    const updateProductOptionValueEntities =
+      currentProductOptionValueEntities.map((pov) => {
         const updateOptionValueDto = optionValueIdToOptionValue[pov.id];
         if (!updateOptionValueDto) {
           return pov;
         }
         return { ...pov, ...updateOptionValueDto };
-      },
-    );
-    await this.productOptionValueRepository.save(
-      updateProductOptionValueEntities,
-    );
+      });
 
-    const variantIdToPrice = productVariants.reduce<{
-      [key: string]: number;
+    const existOptionValueIds = new Set(
+      currentProductOptionValueEntities.map((ov) => ov.id),
+    );
+    const newOptionValueEntitiesFromOldOptions = updateProductDto.productOptions
+      .map((op) => {
+        const values = op.optionValues;
+        // @ts-ignore
+        values.forEach((v) => (v['productOptionId'] = op.id));
+        return values;
+      })
+      .flat()
+      .filter((ov) => !existOptionValueIds.has(ov.id));
+
+    await this.productOptionValueRepository.save([
+      ...updateProductOptionValueEntities,
+      ...newOptionValueEntitiesFromNewOptions,
+      ...newOptionValueEntitiesFromOldOptions,
+    ]);
+
+    const variantIdToVariant = productVariants.reduce<{
+      [key: string]: UpdateProductVariantDto;
     }>((map, variant) => {
-      map[variant.id] = variant.price;
+      map[variant.id] = variant;
       return map;
     }, {});
 
-    const variantIdToQuantity = productVariants.reduce<{
-      [key: string]: number;
-    }>((map, variant) => {
-      map[variant.id] = variant.quantity;
-      return map;
-    }, {});
-
-    const allVariants = await this.productVariantRepository.find({
+    //todo: validate product variants
+    const allCurrentVariantEntities = await this.productVariantRepository.find({
       where: {
         productId: productId,
       },
     });
-    allVariants.forEach((v) => {
-      v.price = variantIdToPrice[v.id] || 0;
-      v.quantity = variantIdToQuantity[v.id] || 0;
+    allCurrentVariantEntities.forEach((v) => {
+      v.price = variantIdToVariant[v.id]?.price || 0;
+      v.quantity = variantIdToVariant[v.id]?.quantity || 0;
+      v.specs = variantIdToVariant[v.id]?.specs || v.specs;
+
       const specs = v.specs;
       for (const spec of specs) {
         spec.optionName = optionIdToOption[spec.optionId].name;
@@ -379,8 +418,23 @@ export class ProductsService {
           optionValueIdToOptionValue[spec.optionValueId].name;
       }
     });
-
-    await this.productVariantRepository.save(allVariants);
+    const currentVariantIds = new Set(
+      allCurrentVariantEntities.map((v) => v.id),
+    );
+    const newVariants = productVariants.filter(
+      (pv) => !currentVariantIds.has(pv.id),
+    );
+    const newProductVariantEntities = newVariants.map((v) =>
+      this.productVariantRepository.create({
+        ...v,
+        productId: productId,
+        createdById: user.userId,
+      }),
+    );
+    await this.productVariantRepository.save([
+      ...allCurrentVariantEntities,
+      ...newProductVariantEntities,
+    ]);
 
     return this.productRepository.findOne({
       where: {
