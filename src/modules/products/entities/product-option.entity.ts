@@ -20,4 +20,7 @@ export class ProductOptionEntity extends AbstractBaseEntity {
 
   @OneToMany(() => ProductOptionValueEntity, (pov) => pov.productOption)
   optionValues: ProductOptionValueEntity[];
+
+  @Column({ name: 'position', type: 'int', nullable: false })
+  position: number;
 }

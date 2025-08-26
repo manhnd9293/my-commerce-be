@@ -4,4 +4,5 @@ import { ProductOptionValueEntity } from '../entities/product-option-value.entit
 export class UpdateOptionValueDto extends PickType(ProductOptionValueEntity, [
   'id',
   'name',
+  'position',
 ] as const) {}

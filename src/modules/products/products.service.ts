@@ -22,8 +22,8 @@ import { ProductOptionEntity } from './entities/product-option.entity';
 import { ProductOptionValueEntity } from './entities/product-option-value.entity';
 import { NewCreateProductDto } from './dto/new-create-product.dto';
 import { UpdateProductOptionDto } from './dto/update-product-option.dto';
-import { UpdateOptionValueDto } from './dto/update-option-value.dto';
 import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
+import { UpdateOptionValueDto } from './dto/update-option-value.dto';
 
 @Injectable()
 export class ProductsService {
@@ -92,18 +92,25 @@ export class ProductsService {
       createProductDto.productOptions &&
       createProductDto.productOptions.length > 0
     ) {
-      const newOptionEntities = createProductDto.productOptions.map((op) => ({
-        ...op,
-        productId: newProduct.id,
-      }));
+      const newOptionEntities = createProductDto.productOptions.map(
+        (op, index) =>
+          this.productOptionRepository.create({
+            ...op,
+            productId: newProduct.id,
+            position: index,
+          }),
+      );
       await this.productOptionRepository.save(newOptionEntities);
 
       const newOptionValues = createProductDto.productOptions.reduce(
         (list, option) => {
-          const optionValues = option.optionValues.map((ov) => ({
-            ...ov,
-            productOptionId: option.id,
-          }));
+          const optionValues = option.optionValues.map((ov, index) =>
+            this.productOptionValueRepository.create({
+              ...ov,
+              productOptionId: option.id,
+              position: index,
+            }),
+          );
           list.push(...optionValues);
           return list;
         },
@@ -131,7 +138,9 @@ export class ProductsService {
       relations: {
         productVariants: true,
         category: true,
-        productOptions: true,
+        productOptions: {
+          optionValues: true,
+        },
       },
     });
   }
@@ -141,9 +150,11 @@ export class ProductsService {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.productImages', 'productImages')
-      .leftJoinAndSelect('productImages.asset', 'asset');
-    queryBuilder.orderBy('product.createdAt', 'ASC');
-
+      .leftJoinAndSelect('productImages.asset', 'asset')
+      .orderBy({
+        'product.createdAt': 'ASC',
+        'productImages.pos': 'ASC',
+      });
     const products = await queryBuilder.getMany();
     await Promise.all(
       products.map(async (product) => {
@@ -217,7 +228,11 @@ export class ProductsService {
       .leftJoinAndSelect('product.productOptions', 'productOptions')
       .leftJoinAndSelect('productOptions.optionValues', 'optionValues')
       .addSelect('product.description')
-      .orderBy('productImages.pos', 'ASC')
+      .orderBy({
+        'productImages.pos': 'ASC',
+        'productOptions.position': 'ASC',
+        'optionValues.position': 'ASC',
+      })
       .getOne();
 
     if (!product) {
@@ -303,109 +318,72 @@ export class ProductsService {
       },
     );
 
-    const optionIdToOption = productOptions.reduce<{
-      [key: string]: UpdateProductOptionDto;
-    }>((map, option) => {
-      map[option.id] = option;
-      return map;
-    }, {});
+    /* Update product options */
+    await this.updateProductOptions(productId, updateProductDto.productOptions);
 
-    const optionValueIdToOptionValue = productOptions
-      .map((op) => op.optionValues)
-      .flat()
-      .reduce<{ [key: string]: UpdateOptionValueDto }>((map, ov) => {
-        map[ov.id] = ov;
-        return map;
-      }, {});
+    await this.updateProductOptionValues(
+      productId,
+      updateProductDto.productOptions,
+    );
 
-    //todo: handle case add, remove option
-    const productOptionEntities = await this.productOptionRepository.find({
+    await this.updateProductVariants(productId, productVariants, user);
+
+    return this.productRepository.findOne({
       where: {
-        productId,
+        id: productId,
       },
     });
-    const updateOptionEntities = productOptionEntities.map((o) => {
-      const updateOption = optionIdToOption[o.id];
-      if (!updateOption) {
-        return o;
-      }
-      return { ...o, ...updateOption };
-    });
-    const currentOptionIds = new Set(
-      productOptionEntities.map((poe) => poe.id),
-    );
-    const newOptions = productOptions.filter(
-      (po) => !currentOptionIds.has(po.id),
-    );
-    await this.productOptionRepository.save([
-      ...updateOptionEntities,
-      ...newOptions.map((newOption) =>
-        this.productOptionRepository.create({ ...newOption, productId }),
-      ),
-    ]);
+  }
 
-    const newOptionValueEntitiesFromNewOptions = newOptions.reduce(
-      (all, option) => {
-        const optionValueEntities = option.optionValues.map((ov) =>
-          this.productOptionValueRepository.create({
-            ...ov,
-            productOptionId: option.id,
-          }),
-        );
+  @Transactional()
+  private async updateProductVariants(
+    productId: string,
+    updateVariants: UpdateProductVariantDto[],
+    user: UserAuth,
+  ) {
+    //todo: validate product variants
 
-        all.push(...optionValueEntities);
-        return all;
-      },
-      [],
-    );
-
-    const currentProductOptionValueEntities =
-      await this.productOptionValueRepository.find({
-        where: {
-          productOptionId: In(productOptionEntities.map((o) => o.id)),
-        },
-      });
-    const updateProductOptionValueEntities =
-      currentProductOptionValueEntities.map((pov) => {
-        const updateOptionValueDto = optionValueIdToOptionValue[pov.id];
-        if (!updateOptionValueDto) {
-          return pov;
-        }
-        return { ...pov, ...updateOptionValueDto };
-      });
-
-    const existOptionValueIds = new Set(
-      currentProductOptionValueEntities.map((ov) => ov.id),
-    );
-    const newOptionValueEntitiesFromOldOptions = updateProductDto.productOptions
-      .map((op) => {
-        const values = op.optionValues;
-        // @ts-ignore
-        values.forEach((v) => (v['productOptionId'] = op.id));
-        return values;
-      })
-      .flat()
-      .filter((ov) => !existOptionValueIds.has(ov.id));
-
-    await this.productOptionValueRepository.save([
-      ...updateProductOptionValueEntities,
-      ...newOptionValueEntitiesFromNewOptions,
-      ...newOptionValueEntitiesFromOldOptions,
-    ]);
-
-    const variantIdToVariant = productVariants.reduce<{
+    const variantIdToVariant = updateVariants.reduce<{
       [key: string]: UpdateProductVariantDto;
     }>((map, variant) => {
       map[variant.id] = variant;
       return map;
     }, {});
 
-    //todo: validate product variants
+    const updateVariantIdSet = new Set(Object.keys(variantIdToVariant));
+
     const allCurrentVariantEntities = await this.productVariantRepository.find({
       where: {
         productId: productId,
       },
     });
+
+    const productOptionEntities = await this.productOptionRepository.find({
+      where: {
+        productId,
+      },
+      relations: {
+        optionValues: true,
+      },
+    });
+
+    const optionIdToOption = productOptionEntities.reduce<{
+      [key: string]: ProductOptionEntity;
+    }>((idToOption, option) => {
+      idToOption[option.id] = option;
+      return idToOption;
+    }, {});
+
+    const idToOptionValues = productOptionEntities.reduce<{
+      [key: string]: ProductOptionValueEntity;
+    }>((map, po) => {
+      const { optionValues } = po;
+      for (const ov of optionValues) {
+        map[ov.id] = ov;
+      }
+      return map;
+    }, {});
+
     allCurrentVariantEntities.forEach((v) => {
       v.price = variantIdToVariant[v.id]?.price || 0;
       v.quantity = variantIdToVariant[v.id]?.quantity || 0;
@@ -414,14 +392,13 @@ export class ProductsService {
       const specs = v.specs;
       for (const spec of specs) {
         spec.optionName = optionIdToOption[spec.optionId].name;
-        spec.optionValueName =
-          optionValueIdToOptionValue[spec.optionValueId].name;
+        spec.optionValueName = idToOptionValues[spec.optionValueId].name;
       }
     });
     const currentVariantIds = new Set(
       allCurrentVariantEntities.map((v) => v.id),
     );
-    const newVariants = productVariants.filter(
+    const newVariants = updateVariants.filter(
       (pv) => !currentVariantIds.has(pv.id),
     );
     const newProductVariantEntities = newVariants.map((v) =>
@@ -431,16 +408,21 @@ export class ProductsService {
         createdById: user.userId,
       }),
     );
+    const deletedIds = allCurrentVariantEntities
+      .map((v) => v.id)
+      .filter((id) => !updateVariantIdSet.has(id));
+    await this.productVariantRepository.delete({
+      id: In(deletedIds),
+    });
+
+    const remainedProductVariantEntities = allCurrentVariantEntities.filter(
+      (pv) => updateVariantIdSet.has(pv.id),
+    );
+
     await this.productVariantRepository.save([
-      ...allCurrentVariantEntities,
+      ...remainedProductVariantEntities,
       ...newProductVariantEntities,
     ]);
-
-    return this.productRepository.findOne({
-      where: {
-        id: productId,
-      },
-    });
   }
 
   async updateImages(
@@ -575,6 +557,191 @@ export class ProductsService {
     });
 
     return this.productImageRepository.save(allMedia);
+  }
+
+  @Transactional()
+  async updateProductOptions(
+    productId: string,
+    productOptions: UpdateProductOptionDto[],
+  ) {
+    const optionIdToOption = productOptions.reduce<{
+      [key: string]: UpdateProductOptionDto;
+    }>((map, option) => {
+      map[option.id] = option;
+      return map;
+    }, {});
+
+    const productOptionEntities = await this.productOptionRepository.find({
+      where: {
+        productId,
+      },
+    });
+    const updateOptionEntities = productOptionEntities.map((o) => {
+      const updateOption = optionIdToOption[o.id];
+      if (!updateOption) {
+        return o;
+      }
+      return { ...o, ...updateOption };
+    });
+    const currentOptionIds = new Set(
+      productOptionEntities.map((poe) => poe.id),
+    );
+    const newOptionIds = new Set(Object.keys(Object.keys(optionIdToOption)));
+    const newOptionDtos = productOptions.filter(
+      (po) => !currentOptionIds.has(po.id),
+    );
+
+    const deleteOptions = productOptionEntities.filter(
+      (op) => !newOptionIds.has(op.id),
+    );
+
+    await this.productOptionRepository.softDelete(
+      deleteOptions.map((o) => o.id),
+    );
+
+    const newOptionEntities = newOptionDtos.map((newOption) =>
+      this.productOptionRepository.create({ ...newOption, productId }),
+    );
+    const idToPosition = productOptions.reduce<{ [id: string]: number }>(
+      (map, option, index) => {
+        map[option.id] = index;
+        return map;
+      },
+      {},
+    );
+    const allUpdateEntities = [...updateOptionEntities, ...newOptionEntities];
+    allUpdateEntities.forEach((e) => (e.position = idToPosition[e.id]));
+    await this.productOptionRepository.save(allUpdateEntities);
+  }
+
+  @Transactional()
+  async updateProductOptionValues(
+    productId: string,
+    productOptions: UpdateProductOptionDto[],
+  ) {
+    const updateProductOptionValues = productOptions
+      .map((po) => po.optionValues)
+      .flat();
+
+    const currentProductOptionValueEntities =
+      await this.productOptionValueRepository.find({
+        where: {
+          productOption: {
+            productId,
+          },
+        },
+      });
+
+    const updateIds = new Set(updateProductOptionValues.map((pov) => pov.id));
+    const currentIds = new Set(
+      currentProductOptionValueEntities.map((e) => e.id),
+    );
+    const deletedOptionValues = currentProductOptionValueEntities.filter(
+      (entity) => !updateIds.has(entity.id),
+    );
+    await this.productOptionValueRepository.softDelete(
+      deletedOptionValues.map((ov) => ov.id),
+    );
+    const newProductOptionValueEntities = updateProductOptionValues
+      .filter((pov) => !currentIds.has(pov.id))
+      .map((dto) =>
+        this.productOptionValueRepository.create({
+          ...dto,
+        }),
+      );
+
+    const updateProductOptionEntities =
+      currentProductOptionValueEntities.filter((pov) => updateIds.has(pov.id));
+    const updateIdToDto = updateProductOptionValues.reduce<{
+      [key: string]: UpdateOptionValueDto;
+    }>((map, pov) => {
+      map[pov.id] = pov;
+      return map;
+    }, {});
+    updateProductOptionEntities.map((entity) => {
+      return { ...entity, ...updateIdToDto[entity.id] };
+    });
+
+    const allUpdateEntities = [
+      ...newProductOptionValueEntities,
+      ...updateProductOptionEntities,
+    ];
+    const idToPosition = updateProductOptionValues.reduce<{
+      [id: string]: number;
+    }>((map, pov) => {
+      map[pov.id] = pov.position;
+      return map;
+    }, {});
+
+    allUpdateEntities.forEach((e) => (e.position = idToPosition[e.id]));
+    await this.productOptionValueRepository.save(allUpdateEntities);
+
+    // const currentOptionEntities = await this.productOptionRepository.find({
+    //   where: {
+    //     productId,
+    //   },
+    // });
+    // const updateOptionIdSet = new Set(productOptions.map((o) => o.id));
+    // const currentOptionIdSet = new Set(currentOptionEntities.map((o) => o.id));
+    // const optionValueIdToOptionValue = productOptions
+    //   .map((op) => op.optionValues)
+    //   .flat()
+    //   .reduce<{ [key: string]: UpdateOptionValueDto }>((map, ov) => {
+    //     map[ov.id] = ov;
+    //     return map;
+    //   }, {});
+    // const newOptions = productOptions.filter(
+    //   (po) => !currentOptionIdSet.has(po.id),
+    // );
+    //
+    // const newOptionValueEntitiesFromNewOptions = newOptions.reduce(
+    //   (all, option) => {
+    //     const optionValueEntities = option.optionValues.map((ov) =>
+    //       this.productOptionValueRepository.create({
+    //         ...ov,
+    //         productOptionId: option.id,
+    //       }),
+    //     );
+    //
+    //     all.push(...optionValueEntities);
+    //     return all;
+    //   },
+    //   [],
+    // );
+    //
+    // const currentProductOptionValueEntities =
+    //   await this.productOptionValueRepository.find({
+    //     where: {
+    //       productOptionId: In(currentOptionEntities.map((o) => o.id)),
+    //     },
+    //   });
+    // const updateProductOptionValueEntities =
+    //   currentProductOptionValueEntities.map((pov) => {
+    //     const updateOptionValueDto = optionValueIdToOptionValue[pov.id];
+    //     if (!updateOptionValueDto) {
+    //       return pov;
+    //     }
+    //     return { ...pov, ...updateOptionValueDto };
+    //   });
+    //
+    // const existOptionValueIds = new Set(
+    //   currentProductOptionValueEntities.map((ov) => ov.id),
+    // );
+    // const newOptionValueEntitiesFromOldOptions = productOptions
+    //   .map((op) => {
+    //     const values = op.optionValues;
+    //     // @ts-ignore
+    //     values.forEach((v) => (v['productOptionId'] = op.id));
+    //     return values;
+    //   })
+    //   .flat()
+    //   .filter((ov) => !existOptionValueIds.has(ov.id));
+    //
+    // await this.productOptionValueRepository.save([
+    //   ...updateProductOptionValueEntities,
+    //   ...newOptionValueEntitiesFromNewOptions,
+    //   ...newOptionValueEntitiesFromOldOptions,
+    // ]);
   }
 
   @Transactional()

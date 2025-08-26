@@ -16,4 +16,7 @@ export class ProductOptionValueEntity extends AbstractBaseEntity {
     referencedColumnName: 'id',
   })
   productOption: ProductOptionEntity;
+
+  @Column({ name: 'position', type: 'int', nullable: false })
+  position: number;
 }
