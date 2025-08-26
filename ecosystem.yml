@@ -1,0 +1,9 @@
+apps:
+  - name: 'my-commerce-dev'
+    script: './dist/main.js'
+    # node_args: '-r ts-node/register -r tsconfig-paths/register -r dotenv/config'
+    kill_timeout: 10000
+    instances: 1
+    exec_mode: cluster
+    env:
+      NODE_ENV: dev
