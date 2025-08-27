@@ -659,15 +659,16 @@ export class ProductsService {
         }),
       );
 
-    const updateProductOptionEntities =
-      currentProductOptionValueEntities.filter((pov) => updateIds.has(pov.id));
+    let updateProductOptionEntities = currentProductOptionValueEntities.filter(
+      (pov) => updateIds.has(pov.id),
+    );
     const updateIdToDto = updateProductOptionValues.reduce<{
       [key: string]: UpdateOptionValueDto;
     }>((map, pov) => {
       map[pov.id] = pov;
       return map;
     }, {});
-    updateProductOptionEntities.map((entity) => {
+    updateProductOptionEntities = updateProductOptionEntities.map((entity) => {
       return { ...entity, ...updateIdToDto[entity.id] };
     });
 
