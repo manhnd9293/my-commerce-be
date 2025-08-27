@@ -384,17 +384,6 @@ export class ProductsService {
       return map;
     }, {});
 
-    allCurrentVariantEntities.forEach((v) => {
-      v.price = variantIdToVariant[v.id]?.price || 0;
-      v.quantity = variantIdToVariant[v.id]?.quantity || 0;
-      v.specs = variantIdToVariant[v.id]?.specs || v.specs;
-
-      const specs = v.specs;
-      for (const spec of specs) {
-        spec.optionName = optionIdToOption[spec.optionId].name;
-        spec.optionValueName = idToOptionValues[spec.optionValueId].name;
-      }
-    });
     const currentVariantIds = new Set(
       allCurrentVariantEntities.map((v) => v.id),
     );
@@ -418,6 +407,18 @@ export class ProductsService {
     const remainedProductVariantEntities = allCurrentVariantEntities.filter(
       (pv) => updateVariantIdSet.has(pv.id),
     );
+
+    remainedProductVariantEntities.forEach((pv) => {
+      pv.price = variantIdToVariant[pv.id]?.price || 0;
+      pv.quantity = variantIdToVariant[pv.id]?.quantity || 0;
+      pv.specs = variantIdToVariant[pv.id]?.specs || pv.specs;
+
+      const specs = pv.specs;
+      for (const spec of specs) {
+        spec.optionName = optionIdToOption[spec.optionId].name;
+        spec.optionValueName = idToOptionValues[spec.optionValueId].name;
+      }
+    });
 
     await this.productVariantRepository.save([
       ...remainedProductVariantEntities,
@@ -564,12 +565,14 @@ export class ProductsService {
     productId: string,
     productOptions: UpdateProductOptionDto[],
   ) {
-    const optionIdToOption = productOptions.reduce<{
-      [key: string]: UpdateProductOptionDto;
-    }>((map, option) => {
-      map[option.id] = option;
-      return map;
-    }, {});
+    const optionIdToOption = productOptions
+      .map((po) => ({ ...po, optionValues: undefined })) //remove optionValues field to prevent cascade update
+      .reduce<{
+        [key: string]: UpdateProductOptionDto;
+      }>((map, option) => {
+        map[option.id] = option;
+        return map;
+      }, {});
 
     const productOptionEntities = await this.productOptionRepository.find({
       where: {
@@ -595,9 +598,10 @@ export class ProductsService {
       (op) => !newOptionIds.has(op.id),
     );
 
-    await this.productOptionRepository.softDelete(
-      deleteOptions.map((o) => o.id),
-    );
+    deleteOptions.length > 0 &&
+      (await this.productOptionRepository.softDelete(
+        deleteOptions.map((o) => o.id),
+      ));
 
     const newOptionEntities = newOptionDtos.map((newOption) =>
       this.productOptionRepository.create({ ...newOption, productId }),
@@ -620,7 +624,11 @@ export class ProductsService {
     productOptions: UpdateProductOptionDto[],
   ) {
     const updateProductOptionValues = productOptions
-      .map((po) => po.optionValues)
+      .map((po) => {
+        const optionValues = po.optionValues;
+        optionValues.forEach((ov) => (ov.productOptionId = po.id));
+        return optionValues;
+      })
       .flat();
 
     const currentProductOptionValueEntities =
@@ -639,9 +647,10 @@ export class ProductsService {
     const deletedOptionValues = currentProductOptionValueEntities.filter(
       (entity) => !updateIds.has(entity.id),
     );
-    await this.productOptionValueRepository.softDelete(
-      deletedOptionValues.map((ov) => ov.id),
-    );
+    deletedOptionValues.length > 0 &&
+      (await this.productOptionValueRepository.softDelete(
+        deletedOptionValues.map((ov) => ov.id),
+      ));
     const newProductOptionValueEntities = updateProductOptionValues
       .filter((pov) => !currentIds.has(pov.id))
       .map((dto) =>
@@ -675,73 +684,6 @@ export class ProductsService {
 
     allUpdateEntities.forEach((e) => (e.position = idToPosition[e.id]));
     await this.productOptionValueRepository.save(allUpdateEntities);
-
-    // const currentOptionEntities = await this.productOptionRepository.find({
-    //   where: {
-    //     productId,
-    //   },
-    // });
-    // const updateOptionIdSet = new Set(productOptions.map((o) => o.id));
-    // const currentOptionIdSet = new Set(currentOptionEntities.map((o) => o.id));
-    // const optionValueIdToOptionValue = productOptions
-    //   .map((op) => op.optionValues)
-    //   .flat()
-    //   .reduce<{ [key: string]: UpdateOptionValueDto }>((map, ov) => {
-    //     map[ov.id] = ov;
-    //     return map;
-    //   }, {});
-    // const newOptions = productOptions.filter(
-    //   (po) => !currentOptionIdSet.has(po.id),
-    // );
-    //
-    // const newOptionValueEntitiesFromNewOptions = newOptions.reduce(
-    //   (all, option) => {
-    //     const optionValueEntities = option.optionValues.map((ov) =>
-    //       this.productOptionValueRepository.create({
-    //         ...ov,
-    //         productOptionId: option.id,
-    //       }),
-    //     );
-    //
-    //     all.push(...optionValueEntities);
-    //     return all;
-    //   },
-    //   [],
-    // );
-    //
-    // const currentProductOptionValueEntities =
-    //   await this.productOptionValueRepository.find({
-    //     where: {
-    //       productOptionId: In(currentOptionEntities.map((o) => o.id)),
-    //     },
-    //   });
-    // const updateProductOptionValueEntities =
-    //   currentProductOptionValueEntities.map((pov) => {
-    //     const updateOptionValueDto = optionValueIdToOptionValue[pov.id];
-    //     if (!updateOptionValueDto) {
-    //       return pov;
-    //     }
-    //     return { ...pov, ...updateOptionValueDto };
-    //   });
-    //
-    // const existOptionValueIds = new Set(
-    //   currentProductOptionValueEntities.map((ov) => ov.id),
-    // );
-    // const newOptionValueEntitiesFromOldOptions = productOptions
-    //   .map((op) => {
-    //     const values = op.optionValues;
-    //     // @ts-ignore
-    //     values.forEach((v) => (v['productOptionId'] = op.id));
-    //     return values;
-    //   })
-    //   .flat()
-    //   .filter((ov) => !existOptionValueIds.has(ov.id));
-    //
-    // await this.productOptionValueRepository.save([
-    //   ...updateProductOptionValueEntities,
-    //   ...newOptionValueEntitiesFromNewOptions,
-    //   ...newOptionValueEntitiesFromOldOptions,
-    // ]);
   }
 
   @Transactional()

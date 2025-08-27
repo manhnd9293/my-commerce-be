@@ -11,6 +11,7 @@ export default () => ({
     database: process.env.POSTGRES_DB,
     synchronize: process.env.NODE_ENV !== 'production',
     autoLoadEntities: true,
+    logging: true,
     ssl: {
       // rejectUnauthorized: true,
       // ca: fs.readFileSync('src/config/db/ca.pem').toString(),

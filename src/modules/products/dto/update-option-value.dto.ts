@@ -5,4 +5,5 @@ export class UpdateOptionValueDto extends PickType(ProductOptionValueEntity, [
   'id',
   'name',
   'position',
+  'productOptionId',
 ] as const) {}
