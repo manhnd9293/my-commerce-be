@@ -51,4 +51,7 @@ export class Product extends AbstractBaseEntity {
 
   @OneToMany(() => ProductOptionEntity, (po) => po.product)
   productOptions: ProductOptionEntity[];
+
+  @Column({ name: 'thumbnail_asset_id', type: 'varchar', nullable: true })
+  thumbnailAssetId: string;
 }

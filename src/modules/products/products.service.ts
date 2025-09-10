@@ -149,23 +149,10 @@ export class ProductsService {
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.productImages', 'productImages')
-      .leftJoinAndSelect('productImages.asset', 'asset')
       .orderBy({
         'product.createdAt': 'ASC',
-        'productImages.pos': 'ASC',
       });
     const products = await queryBuilder.getMany();
-    await Promise.all(
-      products.map(async (product) => {
-        if (product.productImages.length === 0) {
-          return;
-        }
-        product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
-          product.productImages[0].assetId,
-        );
-      }),
-    );
 
     return products;
   }
@@ -174,12 +161,7 @@ export class ProductsService {
     const { categoryId, search, page, pageSize } = query;
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
-      .leftJoinAndSelect('product.productSizes', 'productSizes')
-      .leftJoinAndSelect('product.productColors', 'productColors')
-      .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.productImages', 'productImages')
-      .leftJoinAndSelect('productImages.asset', 'asset')
-      .orderBy('productImages.pos', 'ASC');
+      .leftJoinAndSelect('product.category', 'category');
 
     if (categoryId) {
       queryBuilder.andWhere('category.id = :categoryId', { categoryId });
@@ -191,7 +173,6 @@ export class ProductsService {
     }
     const count = await queryBuilder.getCount();
     queryBuilder.orderBy('product.createdAt', 'ASC');
-    // queryBuilder.addOrderBy('productImages.id', 'ASC');
 
     queryBuilder.skip((page - 1) * pageSize);
     queryBuilder.take(pageSize);
@@ -202,17 +183,17 @@ export class ProductsService {
       pageSize,
       totalPage: Math.ceil(count / pageSize),
     };
-    for (const product of products) {
-      if (product.productImages.length === 0) {
-        continue;
-      }
-      const thumbnailImage = product.productImages.find(
-        (image) => image.pos === 0,
-      );
-      product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
-        thumbnailImage.assetId,
-      );
-    }
+    // for (const product of products) {
+    //   if (product.productImages.length === 0) {
+    //     continue;
+    //   }
+    //   const thumbnailImage = product.productImages.find(
+    //     (image) => image.pos === 0,
+    //   );
+    //   product.thumbnailUrl = await this.fileStorageService.createPresignedUrl(
+    //     thumbnailImage.assetId,
+    //   );
+    // }
 
     return pageData;
   }
@@ -512,6 +493,7 @@ export class ProductsService {
     return response;
   }
 
+  @Transactional()
   async updateProductMedia(
     productId: string,
     data: { updateIds: string[] },
@@ -556,6 +538,15 @@ export class ProductsService {
     await this.productImageRepository.delete({
       assetId: In(deletedProductImages.map((image) => image.assetId)),
     });
+
+    await this.productRepository.update(
+      {
+        id: productId,
+      },
+      {
+        thumbnailAssetId: data.updateIds[0],
+      },
+    );
 
     return this.productImageRepository.save(allMedia);
   }

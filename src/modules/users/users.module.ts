@@ -6,6 +6,7 @@ import { UserEntity } from './entity/user.entity';
 import { OrderItemEntity } from '../orders/entities/order-item.entity';
 import { OrderEntity } from '../orders/entities/order.entity';
 import { UserAddressEntity } from './entity/user-address.entity';
+import { UserEntitySubscriber } from './subscribers/user-entity.subscriber';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { UserAddressEntity } from './entity/user-address.entity';
     ]),
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, UserEntitySubscriber],
   exports: [UsersService],
 })
 @Global()

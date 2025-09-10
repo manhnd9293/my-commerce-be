@@ -11,6 +11,7 @@ import { Category } from '../categories/entities/category.entity';
 import { ProductImage } from './entities/product-image.entity';
 import { ProductOptionEntity } from './entities/product-option.entity';
 import { ProductOptionValueEntity } from './entities/product-option-value.entity';
+import { ProductEntitySubscriber } from './entity-subscribers/product-entity.subscriber';
 
 @Module({
   imports: [
@@ -27,6 +28,6 @@ import { ProductOptionValueEntity } from './entities/product-option-value.entity
     ]),
   ],
   controllers: [ProductsController],
-  providers: [ProductsService],
+  providers: [ProductsService, ProductEntitySubscriber],
 })
 export class ProductsModule {}

@@ -93,9 +93,9 @@ export class UsersService {
         await this.fileStorageService.createPresignedUrl(productImage.assetId);
     }
     if (userEntity.avatarFileId) {
-      userEntity.avatarUrl = await this.fileStorageService.createPresignedUrl(
-        userEntity.avatarFileId,
-      );
+      // userEntity.avatarUrl = await this.fileStorageService.createPresignedUrl(
+      //   userEntity.avatarFileId,
+      // );
     }
     return userEntity;
   }
